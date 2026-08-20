@@ -1,0 +1,850 @@
+---
+import { getCollection } from "astro:content";
+import { site } from "../config";
+
+const projects = (await getCollection("work", ({ data }) => !data.draft)).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+
+function thumbKind(p: (typeof projects)[number]) {
+  const tags = p.data.tags.map((t) => t.toLowerCase());
+  if (p.data.ai) return "ai";
+  if (tags.some((t) => /craft|visual|motion|type/.test(t))) return "craft";
+  if (tags.some((t) => /system|token/.test(t))) return "sys";
+  return "ux";
+}
+
+const frames = projects.map((p, i) => ({
+  i,
+  slug: p.id,
+  title: p.data.title,
+  kind: p.data.tags[0] || p.data.role,
+  blurb: p.data.summary,
+  ai: p.data.ai,
+  thumb: thumbKind(p),
+}));
+---
+
+<section class="hero-canvas" id="heroCanvas">
+  <div class="hc-bg" aria-hidden="true"></div>
+
+  <div class="hc-headline">
+    <p class="eyebrow hc-kicker">canvas agent · live</p>
+    <h1 id="hcName" data-name={site.heroGreeting}>{site.heroGreeting}<span class="hc-caret" aria-hidden="true"></span></h1>
+    <p class="hc-subcopy" id="hcSub">{site.tagline}</p>
+  </div>
+  <script is:inline>
+    /* Before first paint (only in the animated path): empty the greeting so the typing
+       animation starts from scratch, and hide the subcopy so it can fade in afterward. */
+    (function () {
+      try {
+        if (
+          matchMedia("(pointer: fine)").matches &&
+          !matchMedia("(prefers-reduced-motion: reduce)").matches
+        ) {
+          var h = document.getElementById("hcName");
+          if (h) { var c = h.querySelector(".hc-caret"); h.textContent = ""; if (c) h.appendChild(c); }
+          var s = document.getElementById("hcSub");
+          if (s) s.classList.add("hc-hidden");
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- The interactive canvas is a pointer-only visual enhancement; keyboard/AT users
+       get the equivalent linear Work list + nav, so it's hidden from the a11y tree. -->
+  <div class="hc-stage" id="hcStage" aria-hidden="true">
+    <div class="hc-world" id="hcWorld">
+    <div class="hc-zoomer" id="hcZoomer">
+    {
+      frames.map((f) => (
+        <a
+          class:list={["hc-frame", { hot: f.ai }]}
+          href={`/work/${f.slug}`}
+          data-i={f.i}
+          data-ai={f.ai ? "1" : "0"}
+          data-thumb={f.thumb}
+          tabindex="-1"
+          aria-label={`Open case study: ${f.title}`}
+        >
+          <span class="hc-label">Frame {f.i + 1}{f.ai ? " · AI" : ""}</span>
+          <span class="hc-open" aria-hidden="true">Open ↗</span>
+          <span class="hc-thumb" data-thumb={f.thumb}>
+            <span class="hc-glyph">{f.ai ? "◍ agent" : f.thumb === "craft" ? "✳ craft" : f.thumb === "sys" ? "◇ system" : "→ flow"}</span>
+          </span>
+          <span class="hc-meta">
+            <span class="hc-row">
+              <span class="hc-title">{f.title}</span>
+              <span class="chip-kind">{f.kind}</span>
+            </span>
+            <span class="hc-blurb">{f.blurb}</span>
+          </span>
+        </a>
+      ))
+    }
+    </div>
+    </div>
+  </div>
+
+  <div class="hc-zoom" id="hcZoom" aria-hidden="true">
+    <button class="hc-zbtn" id="hcZoomIn" type="button" tabindex="-1">+</button>
+    <button class="hc-zbtn hc-zfit" id="hcZoomFit" type="button" tabindex="-1">⤢</button>
+    <button class="hc-zbtn" id="hcZoomOut" type="button" tabindex="-1">−</button>
+  </div>
+
+  <div class="hc-status" id="hcStatus" aria-hidden="true"><span class="hc-pulse"></span><span id="hcStatusText">booting canvas…</span></div>
+
+  <div class="hc-prompt" id="hcPrompt" aria-hidden="true">
+    <p class="hc-hint" id="hcHint">drag a frame · click to open · or ask below</p>
+    <div class="hc-input">
+      <span class="hc-spark">✦</span>
+      <input id="hcPromptInput" type="text" tabindex="-1" placeholder="Ask the canvas to rearrange…" />
+      <kbd>↵</kbd>
+    </div>
+    <div class="hc-chips">
+      <button class="hc-chip" data-cmd="ai" tabindex="-1"><span class="g">✦</span> Show me the AI work</button>
+      <button class="hc-chip" data-cmd="all" tabindex="-1"><span class="g">◨</span> Tidy up</button>
+    </div>
+  </div>
+
+  <!-- animated-mode scroll indicator -->
+  <a class="hc-scroll" id="hcScroll" href="#work" tabindex="-1" aria-hidden="true">
+    <span>Scroll</span>
+    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9 L12 15 L18 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </a>
+
+  <!-- static-fallback cue (mobile / reduced-motion) -->
+  <a class="hc-scrollcue" href="#work">Selected work ↓</a>
+
+  <div class="hc-peer hc-agent" id="hcAgent" aria-hidden="true">
+    <svg width="22" height="22" viewBox="0 0 22 22"><path d="M2 2 L2 16 L6.5 12.2 L9.2 18.5 L11.8 17.3 L9.1 11.2 L15 11 Z" fill="#6c7cff" stroke="#fff" stroke-width="1.1"/></svg>
+    <span class="hc-tag">canvas agent</span>
+  </div>
+
+  <div class="hc-you" id="hcYou" data-state="default" aria-hidden="true">
+    <span class="cur-glyph">
+      <svg class="g-arrow" width="22" height="22" viewBox="0 0 22 22"><path d="M2 2 L2 16 L6.5 12.2 L9.2 18.5 L11.8 17.3 L9.1 11.2 L15 11 Z" fill="#ff9f45" stroke="#241300" stroke-width="1.1"/></svg>
+      <svg class="g-hand" width="22" height="22" viewBox="0 0 24 24"><g fill="#ff9f45"><rect x="6.6" y="4" width="2.4" height="9" rx="1.2"/><rect x="9.6" y="2.6" width="2.4" height="10.4" rx="1.2"/><rect x="12.6" y="3.4" width="2.4" height="9.6" rx="1.2"/><rect x="15.4" y="5" width="2.4" height="8" rx="1.2"/><rect x="3.6" y="10.5" width="2.4" height="6" rx="1.2" transform="rotate(-32 4.8 13.5)"/><rect x="6" y="10" width="12" height="11" rx="4"/></g></svg>
+      <svg class="g-text" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff9f45" stroke-width="2.2" stroke-linecap="round"><path d="M12 4 V20 M8 4 H16 M8 20 H16"/></svg>
+    </span>
+    <span class="hc-tag">you</span>
+  </div>
+
+  <div class="hc-nudge" id="hcNudge" role="button" tabindex="-1" aria-hidden="true">
+    Want me to pull up the <b>AI &amp; ML work</b>?<span class="hc-go">click me ✦</span>
+  </div>
+</section>
+
+<style>
+  .hero-canvas {
+    position: relative;
+    width: 100%;
+    min-height: 100dvh;
+    overflow: hidden;
+    isolation: isolate;
+    z-index: 1; /* sits above the page-level dot grid, which shows through the transparent bg */
+  }
+  /* only the ambient glows live here now; the dot grid is a page-level layer
+     (see index.astro .page-grid) so it can overflow + fade into the work section */
+  .hc-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image:
+      radial-gradient(circle at 28% 8%, rgba(108, 124, 255, 0.12), transparent 46%),
+      radial-gradient(circle at 85% 66%, rgba(255, 159, 69, 0.07), transparent 44%);
+    /* fade the glows out before the hero's bottom edge so there's no hard seam */
+    -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 72%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0, #000 72%, transparent 100%);
+    will-change: transform;
+  }
+
+  .hc-headline {
+    position: absolute;
+    left: clamp(20px, 4vw, 56px);
+    top: clamp(28px, 6vh, 64px);
+    max-width: min(560px, 62vw);
+    z-index: 2;
+    pointer-events: none;
+  }
+  .hc-kicker { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .hc-kicker::before {
+    content: ""; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 0 4px rgba(108, 124, 255, 0.18);
+  }
+  .hc-headline h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(38px, 7vw, 88px);
+    line-height: 0.94;
+    letter-spacing: -0.03em;
+  }
+  .hc-caret {
+    display: none;
+    width: 3px; height: 0.8em; background: var(--human);
+    margin-left: 4px; transform: translateY(0.08em);
+    animation: hc-blink 1s steps(1) infinite;
+  }
+  @keyframes hc-blink { 50% { opacity: 0; } }
+  .hc-subcopy {
+    margin-top: 16px; font-size: clamp(15px, 1.6vw, 20px);
+    color: var(--text-muted); max-width: 34ch;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  /* hidden until the greeting finishes typing, then the class is removed and it
+     fades in via the transition above (animated path only; element-level class) */
+  .hc-subcopy.hc-hidden { opacity: 0; transform: translateY(6px); }
+
+  .hc-stage { position: absolute; inset: 0; z-index: 1; }
+  /* camera: pan on the outer layer (transform), zoom on the inner layer (CSS `zoom`
+     so text/vectors re-render crisply instead of a scaled/blurry bitmap) */
+  .hc-world { position: absolute; inset: 0; transform-origin: 0 0; will-change: transform; }
+  .hc-zoomer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+  /* zoom controls — frosted vertical cluster on the right edge */
+  .hc-zoom {
+    position: absolute;
+    right: 20px; top: 50%;
+    transform: translateY(-50%);
+    z-index: 8;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 62%, transparent);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    backdrop-filter: blur(12px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .hc-zoom.show { opacity: 1; }
+  .hc-zbtn {
+    width: 32px; height: 32px;
+    display: grid; place-items: center;
+    border: none; border-radius: 999px;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-mono); font-size: 16px; line-height: 1;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+  .hc-zbtn:hover { color: var(--text); background: color-mix(in srgb, var(--text) 8%, transparent); }
+  .hc-zfit { font-size: 13px; }
+
+  .hc-frame {
+    position: absolute; top: 0; left: 0;
+    width: 250px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    z-index: 5;
+    color: var(--text);
+    text-decoration: none;
+    display: block;
+  }
+  .hc-frame:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .hc-frame.dimmed { opacity: 0.26; filter: saturate(0.4); }
+  .hc-label {
+    position: absolute; top: -22px; left: 2px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--faint); white-space: nowrap;
+  }
+  .hc-frame.hot .hc-label { color: var(--accent); }
+  .hc-open {
+    position: absolute; top: 9px; right: 9px; z-index: 3;
+    font-size: 11.5px; font-weight: 500; color: #fff;
+    background: rgba(14, 16, 22, 0.66);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    padding: 5px 9px; border-radius: 8px;
+    opacity: 0; transform: translateY(-4px);
+    transition: opacity 0.16s ease, transform 0.16s ease;
+  }
+  .hc-frame:hover .hc-open, .hc-frame:focus-visible .hc-open { opacity: 1; transform: none; }
+  .hc-thumb {
+    display: grid; place-items: center;
+    height: 120px; border-radius: 12px 12px 0 0; position: relative; overflow: hidden;
+  }
+  .hc-thumb[data-thumb="ai"] { background: linear-gradient(135deg, #2a2f66, #3a2f7a 55%, #202544); }
+  .hc-thumb[data-thumb="sys"] { background: linear-gradient(135deg, #163a3a, #1e4f4a); }
+  .hc-thumb[data-thumb="ux"] { background: linear-gradient(135deg, #3a2a44, #522f52); }
+  .hc-thumb[data-thumb="craft"] { background: linear-gradient(120deg, #ff9f45, #ff6b6b 45%, #6c7cff); }
+  .hc-thumb::after {
+    content: ""; position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.14) 1px, transparent 1px);
+    background-size: 16px 16px; opacity: 0.5;
+  }
+  .hc-glyph { font-family: var(--font-mono); font-size: 12px; color: rgba(255,255,255,0.8); letter-spacing: 0.08em; text-transform: uppercase; z-index: 1; }
+  .hc-meta { display: block; padding: 16px; }
+  .hc-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .hc-title {
+    font-size: 16px; font-weight: 600; letter-spacing: -0.01em;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .chip-kind {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.05em; color: var(--text-muted);
+    border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; white-space: nowrap;
+    flex: none; max-width: 42%; overflow: hidden; text-overflow: ellipsis;
+  }
+  .hc-frame.hot .chip-kind { color: var(--accent); border-color: rgba(108,124,255,0.4); }
+  .hc-blurb { display: block; font-size: 12.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.45;
+    -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .hc-status {
+    position: absolute; left: 16px; bottom: 18px; z-index: 6;
+    display: flex; align-items: center; gap: 9px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+    background: var(--surface); border: 1px solid var(--line); padding: 8px 12px; border-radius: 9px; max-width: 70vw;
+  }
+  .hc-pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; animation: hc-pulse 1.4s ease-in-out infinite; }
+  @keyframes hc-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(108,124,255,0.5); } 50% { box-shadow: 0 0 0 6px rgba(108,124,255,0); } }
+  .hc-status b { color: var(--text); font-weight: 500; }
+
+  /* caption inside the prompt (never overlaps the cards); collapses after first interaction */
+  .hc-hint {
+    margin: 0 0 4px;
+    padding: 2px 8px 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--faint);
+    letter-spacing: 0.03em;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.4s ease, max-height 0.4s ease, margin 0.4s ease;
+  }
+  .hc-hint.show { opacity: 1; max-height: 2.2em; margin-bottom: 8px; }
+
+  .hc-prompt {
+    position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(14px); z-index: 8;
+    width: min(560px, calc(100% - 32px));
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px; box-shadow: var(--shadow);
+    opacity: 0; transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.2,1,0.3,1);
+  }
+  .hc-prompt.show { opacity: 1; transform: translateX(-50%); }
+  .hc-input { display: flex; align-items: center; gap: 10px; padding: 6px 8px 10px; }
+  .hc-spark { color: var(--accent); font-size: 15px; }
+  .hc-input input { flex: 1; background: transparent; border: none; color: var(--text); font-family: var(--font-sans); font-size: 14px; outline: none; }
+  .hc-input input::placeholder { color: var(--faint); }
+  .hc-input kbd { font-family: var(--font-mono); font-size: 10px; color: var(--faint); border: 1px solid var(--line); border-radius: 5px; padding: 2px 5px; }
+  .hc-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .hc-chip {
+    font-family: var(--font-sans); font-size: 12.5px; color: var(--text);
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 6px 11px;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+  }
+  .hc-chip:hover { border-color: var(--accent); background: #232838; }
+  .hc-chip:active { transform: translateY(1px); }
+  .hc-chip .g { color: var(--accent); font-family: var(--font-mono); font-size: 12px; }
+
+  .hc-peer { position: absolute; top: 0; left: 0; z-index: 30; pointer-events: none; will-change: transform; }
+  .hc-peer svg { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+  .hc-peer .hc-tag { display: inline-block; font-family: var(--font-mono); font-size: 11px; color: #fff; padding: 3px 7px; border-radius: 4px 8px 8px 8px; margin: 14px 0 0 -2px; white-space: nowrap; }
+  .hc-agent .hc-tag { background: var(--accent); }
+
+  /* custom "you" cursor — fixed, drawn above everything (incl. the floating nav) */
+  .hc-you {
+    position: fixed; top: 0; left: 0;
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    will-change: transform;
+  }
+  .hc-you.on { opacity: 1; }
+  .hc-you { color: var(--human); }
+  .hc-you svg { filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.85)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5)); }
+  .cur-glyph { position: relative; display: block; width: 22px; height: 22px; }
+  .cur-glyph svg { position: absolute; top: 0; left: 0; display: none; }
+  .hc-you .hc-tag {
+    display: inline-block;
+    font-family: var(--font-mono); font-size: 11px; color: #241300;
+    background: var(--human); padding: 3px 7px; border-radius: 4px 8px 8px 8px;
+    margin: 4px 0 0 8px; white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+  /* the "you" label stays in every state; only the glyph swaps.
+     A filled hand covers every interactive element (grab / drag / click). */
+  .g-hand { transform: translate(-8px, -2px); } /* align the hand near the pointer */
+  .hc-you[data-state="default"] .g-arrow { display: block; }
+  .hc-you[data-state="grab"] .g-hand,
+  .hc-you[data-state="grabbing"] .g-hand,
+  .hc-you[data-state="point"] .g-hand { display: block; }
+  .hc-you[data-state="text"] .g-text { display: block; }
+
+  .hc-nudge {
+    position: absolute; right: 20px; bottom: 132px; z-index: 32; max-width: 230px;
+    background: var(--accent); color: #fff; font-size: 13px; line-height: 1.35; padding: 11px 13px;
+    border-radius: 12px 12px 2px 12px; box-shadow: 0 14px 30px -10px rgba(108,124,255,0.7); cursor: pointer;
+    opacity: 0; transform: translateY(8px) scale(0.96); transform-origin: bottom right; pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.2,1.3,0.4,1);
+  }
+  .hc-nudge.show { opacity: 1; transform: none; pointer-events: auto; }
+  .hc-nudge .hc-go { display: block; margin-top: 4px; font-family: var(--font-mono); font-size: 11px; opacity: 0.85; }
+
+  .hc-scrollcue {
+    position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 9;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+    border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; background: var(--surface);
+    display: none;
+  }
+
+  /* subtle "scroll down" indicator (animated mode) */
+  .hc-scroll {
+    position: absolute;
+    right: 24px; bottom: 32px;
+    z-index: 7;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    opacity: 0;
+    transition: opacity 0.5s ease, color 0.2s ease;
+  }
+  .hc-scroll.show { opacity: 0.75; }
+  .hc-scroll:hover { opacity: 1; color: var(--text); }
+  .hc-scroll svg { animation: hc-bounce 1.8s ease-in-out infinite; }
+  @keyframes hc-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+
+  /* static fallback (mobile / reduced-motion): hide the interactive layer, show a scroll cue */
+  .hero-canvas.hc-static { min-height: auto; padding-block: clamp(64px, 16vh, 140px) 40px; }
+  .hero-canvas.hc-static .hc-stage,
+  .hero-canvas.hc-static .hc-status,
+  .hero-canvas.hc-static .hc-hint,
+  .hero-canvas.hc-static .hc-prompt,
+  .hero-canvas.hc-static .hc-agent,
+  .hero-canvas.hc-static .hc-you,
+  .hero-canvas.hc-static .hc-zoom,
+  .hero-canvas.hc-static .hc-nudge { display: none; }
+  .hero-canvas.hc-static .hc-headline { position: static; max-width: 20ch; }
+  .hero-canvas.hc-static .hc-scrollcue { display: inline-block; position: static; margin: 28px 0 0 clamp(20px, 4vw, 56px); }
+
+  @media (max-width: 720px) { .hc-frame { width: 210px; } }
+  @media (prefers-reduced-motion: reduce) { .hc-caret { animation: none; } .hc-pulse { animation: none; } }
+</style>
+
+<script>
+  (function () {
+    var hero = document.getElementById("heroCanvas");
+    if (!hero) return;
+    var stage = document.getElementById("hcStage");
+    var bg = hero.querySelector(".hc-bg");
+    var nameEl = document.getElementById("hcName");
+    var caret = hero.querySelector(".hc-caret");
+    var subEl = document.getElementById("hcSub");
+    var statusText = document.getElementById("hcStatusText");
+    var statusEl = document.getElementById("hcStatus");
+    var hintEl = document.getElementById("hcHint");
+    var promptEl = document.getElementById("hcPrompt");
+    var agentEl = document.getElementById("hcAgent");
+    var youEl = document.getElementById("hcYou");
+    var nudgeEl = document.getElementById("hcNudge");
+
+    var RM = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var finePointer = window.matchMedia("(pointer: fine)").matches;
+    var animated = finePointer && !RM;
+    var NAME = nameEl.getAttribute("data-name") || nameEl.textContent;
+
+    // ---- static fallback: no canvas heroics; rely on the linear list below ----
+    if (!animated) {
+      hero.classList.add("hc-static");
+      return;
+    }
+
+    // Move the custom cursor to <body> so it escapes the hero's stacking context
+    // (the hero has z-index/isolation) and can render ABOVE the floating nav.
+    document.body.appendChild(youEl);
+
+    var frameEls = Array.prototype.slice.call(stage.querySelectorAll(".hc-frame"));
+    var cards = frameEls.map(function (el, i) {
+      return {
+        el: el, i: i,
+        ai: el.getAttribute("data-ai") === "1",
+        href: el.getAttribute("href"),
+        x: 0, y: 0, vx: 0, vy: 0, rot: 0, vrot: 0, sc: 0, vsc: 0,
+        tx: 0, ty: 0, trot: 0, jr: ((i * 37) % 9) - 4, w: 250, h: 240,
+        mode: "hidden",
+      };
+    });
+
+    var W = 0, H = 0, zTop = 10, done = false;
+    var timers = [];
+    function T(fn, ms) { var id = setTimeout(fn, ms); timers.push(id); return id; }
+    function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+    function stageRect() { return stage.getBoundingClientRect(); }
+
+    // ---- camera (pan + zoom) ----
+    var worldEl = document.getElementById("hcWorld");
+    var zoomerEl = document.getElementById("hcZoomer");
+    var panX = 0, panY = 0, zoom = 1;
+    function applyCamera() {
+      worldEl.style.transform = "translate(" + panX + "px," + panY + "px)";
+      zoomerEl.style.zoom = zoom; // CSS zoom re-renders crisply (unlike transform: scale)
+    }
+    function w2sX(wx) { return panX + wx * zoom; } // world -> screen (for the agent)
+    function w2sY(wy) { return panY + wy * zoom; }
+    function clampZoom(z) { return Math.max(0.5, Math.min(2, z)); }
+    function zoomAt(cx, cy, nz) {
+      nz = clampZoom(nz);
+      var wx = (cx - panX) / zoom, wy = (cy - panY) / zoom;
+      zoom = nz;
+      panX = cx - wx * zoom;
+      panY = cy - wy * zoom;
+      applyCamera();
+    }
+    function resetCamera() { panX = 0; panY = 0; zoom = 1; applyCamera(); }
+
+    function layout() {
+      W = stage.clientWidth; H = stage.clientHeight;
+      var cw = W < 640 ? 200 : (W < 960 ? 220 : 248);
+      var gap = W < 640 ? 16 : 24;
+      // show all first, measure the true card height
+      cards.forEach(function (c) { c.el.style.display = ""; c.w = cw; c.el.style.width = cw + "px"; });
+      var cardH = 200;
+      cards.forEach(function (c) { cardH = Math.max(cardH, c.el.offsetHeight); });
+      cards.forEach(function (c) { c.h = cardH; });
+      // available band between the headline and the prompt
+      var hl = hero.querySelector(".hc-headline").getBoundingClientRect();
+      var sr = stageRect();
+      var bandTop = (hl.bottom - sr.top) + 36;
+      var promptH = promptEl.offsetHeight || 92;
+      var bandBottom = H - promptH - 56;
+      var band = Math.max(cardH, bandBottom - bandTop);
+      // fit only what the space cleanly holds; the rest live in the linear list below
+      var cols = Math.min(3, Math.max(1, Math.floor((W - 32 + gap) / (cw + gap))));
+      var rowsFit = Math.max(1, Math.floor((band + gap) / (cardH + gap)));
+      var maxShown = Math.min(cards.length, Math.max(cols, cols * rowsFit));
+      cards.forEach(function (c, i) {
+        c.off = i >= maxShown;
+        if (c.off) { c.el.style.display = "none"; c.mode = "hidden"; }
+      });
+      var shown = cards.filter(function (c) { return !c.off; });
+      var rows = Math.ceil(shown.length / cols);
+      var gridW = cols * cw + (cols - 1) * gap;
+      var gridH = rows * cardH + (rows - 1) * gap;
+      var startX = Math.max(16, (W - gridW) / 2);
+      var startY = bandTop + Math.max(0, (bandBottom - bandTop - gridH) / 2);
+      if (startY < bandTop) startY = bandTop;
+      shown.forEach(function (c, i) {
+        var col = i % cols, row = Math.floor(i / cols);
+        c.tx = startX + col * (cw + gap);
+        c.ty = startY + row * (cardH + gap);
+        c.trot = c.jr;
+      });
+    }
+    layout();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () {
+      layout(); if (done) cards.forEach(function (c) { if (c.mode !== "drag" && c.mode !== "free") c.mode = "spring"; });
+    });
+
+    // ---- physics ----
+    var last = 0;
+    function spring(c, k, vk, target, stiff, damp, dt) {
+      var a = -stiff * (c[k] - target) - damp * c[vk];
+      c[vk] += a * dt; c[k] += c[vk] * dt;
+    }
+    function frame(now) {
+      var dt = last ? Math.min(0.032, (now - last) / 1000) : 0.016;
+      last = now;
+      var t = now / 1000;
+      if (ag.active) {
+        if (ag.ack) {
+          // acknowledge: quickly trace a small circle twice, then resume
+          var ap = (now - ag.ackStart) / 650;
+          if (ap >= 1) { ag.ack = false; ag.vx = 0; ag.vy = 0; }
+          else {
+            var aa = ap * Math.PI * 2 * 2; // two revolutions
+            ag.x = ag.ackCx + 13 * Math.sin(aa);
+            ag.y = ag.ackCy + 13 * (1 - Math.cos(aa));
+          }
+        } else {
+          spring(ag, "x", "vx", ag.tx, 65, 16, dt); // a touch slower/floatier
+          spring(ag, "y", "vy", ag.ty, 65, 16, dt);
+        }
+        agentEl.style.transform = "translate3d(" + ag.x + "px," + ag.y + "px,0)";
+      }
+      for (var i = 0; i < cards.length; i++) {
+        var c = cards[i];
+        if (c.mode === "hidden") continue;
+        var bob = 0;
+        if (c.mode === "drag") {
+          spring(c, "sc", "vsc", 1.05, 220, 22, dt);
+          spring(c, "rot", "vrot", Math.max(-9, Math.min(9, c.vx * 0.02)), 120, 18, dt);
+        } else if (c.mode === "free") {
+          c.x += c.vx * dt; c.y += c.vy * dt;
+          var fr = Math.exp(-2.6 * dt); c.vx *= fr; c.vy *= fr;
+          var minX = 8, maxX = W - c.w - 8, minY = 8, maxY = H - c.h - 8;
+          if (c.x < minX) { c.x = minX; c.vx = Math.abs(c.vx) * 0.45; }
+          if (c.x > maxX) { c.x = maxX; c.vx = -Math.abs(c.vx) * 0.45; }
+          if (c.y < minY) { c.y = minY; c.vy = Math.abs(c.vy) * 0.45; }
+          if (c.y > maxY) { c.y = maxY; c.vy = -Math.abs(c.vy) * 0.45; }
+          spring(c, "rot", "vrot", Math.max(-10, Math.min(10, c.vx * 0.018)), 90, 14, dt);
+          spring(c, "sc", "vsc", 1, 200, 24, dt);
+          if (Math.abs(c.vx) < 4 && Math.abs(c.vy) < 4) { c.vx = 0; c.vy = 0; }
+        } else {
+          spring(c, "x", "vx", c.tx, 130, 20, dt);
+          spring(c, "y", "vy", c.ty, 130, 20, dt);
+          spring(c, "rot", "vrot", c.trot, 110, 18, dt);
+          spring(c, "sc", "vsc", 1, 170, 20, dt);
+          if (done) bob = Math.sin(t * 0.9 + i * 1.3) * 2.2;
+        }
+        c.el.style.transform = "translate3d(" + c.x + "px," + (c.y + bob) + "px,0) rotate(" + c.rot + "deg) scale(" + c.sc + ")";
+      }
+      // subtle bg parallax follows agent a touch
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    var ag = { x: -80, y: 200, vx: 0, vy: 0, tx: -80, ty: 200, active: true };
+    function agentTo(x, y) { ag.tx = x; ag.ty = y; }
+
+    // ---- drag / open ----
+    cards.forEach(function (c) {
+      c.el.addEventListener("pointerdown", function (e) {
+        if (!done) { e.preventDefault(); return; }
+        if (e.target.closest(".hc-open")) return; // let the link navigate
+        e.preventDefault();
+        noteInteract();
+        c.el.setPointerCapture(e.pointerId);
+        c.mode = "drag";
+        grabbing = true;
+        var sr = stageRect();
+        // convert pointer -> world coords (account for pan + zoom)
+        c.grabX = (e.clientX - sr.left - panX) / zoom - c.x;
+        c.grabY = (e.clientY - sr.top - panY) / zoom - c.y;
+        c.lastX = e.clientX; c.lastY = e.clientY; c.lastT = performance.now();
+        c.downX = e.clientX; c.downY = e.clientY; c.downT = performance.now();
+        c.el.style.zIndex = ++zTop + 5;
+        c.suppress = false;
+      });
+      c.el.addEventListener("pointermove", function (e) {
+        if (c.mode !== "drag") return;
+        var sr = stageRect();
+        c.x = (e.clientX - sr.left - panX) / zoom - c.grabX;
+        c.y = (e.clientY - sr.top - panY) / zoom - c.grabY;
+        var now = performance.now();
+        var dt = Math.max(8, now - c.lastT) / 1000;
+        c.vx = (e.clientX - c.lastX) / zoom / dt;
+        c.vy = (e.clientY - c.lastY) / zoom / dt;
+        c.lastX = e.clientX; c.lastY = e.clientY; c.lastT = now;
+      });
+      function release(e) {
+        if (c.mode !== "drag") return;
+        grabbing = false;
+        var moved = Math.hypot(e.clientX - c.downX, e.clientY - c.downY);
+        var elapsed = performance.now() - c.downT;
+        if (moved < 6 && elapsed < 320) { c.mode = "spring"; return; } // tap -> let click navigate
+        c.suppress = true; // it was a drag -> swallow the click
+        setTimeout(function () { c.suppress = false; }, 60);
+        c.mode = "free";
+        var cap = 2600;
+        c.vx = Math.max(-cap, Math.min(cap, c.vx));
+        c.vy = Math.max(-cap, Math.min(cap, c.vy));
+      }
+      c.el.addEventListener("pointerup", release);
+      c.el.addEventListener("pointercancel", release);
+      c.el.addEventListener("click", function (e) { if (c.suppress) e.preventDefault(); });
+    });
+
+    // ---- interaction tracking / hint / nudge ----
+    var lastInteract = performance.now(), hintFaded = false, nudgeShown = false;
+    function firstInteraction() { if (hintFaded) return; hintFaded = true; hintEl.classList.remove("show"); }
+    function hideNudge() { nudgeEl.classList.remove("show"); nudgeShown = false; }
+    function noteInteract() { lastInteract = performance.now(); hideNudge(); firstInteraction(); }
+    function showNudge() { if (nudgeShown || !done) return; nudgeShown = true; agentTo(W - 150, H - 200); nudgeEl.classList.add("show"); }
+    nudgeEl.addEventListener("click", function () { hideNudge(); cmdFilter("ai"); });
+    nudgeEl.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); hideNudge(); cmdFilter("ai"); } });
+    hero.addEventListener("pointerdown", noteInteract, true);
+
+    // ---- agent idle life ----
+    function rand(n) { return Math.floor(Math.random() * n); }
+    function nudgeCard(c) { if (c.mode === "drag" || c.mode === "free") return; c.vx += (Math.random() - 0.5) * 420; c.vy += (Math.random() - 0.5) * 300; }
+    var idleStep = 0;
+    function idleBehavior() {
+      var pick = idleStep % 3; idleStep++;
+      var vis = cards.filter(function (x) { return !x.off; });
+      var c = vis[rand(vis.length)] || cards[0];
+      // map the frame's world position through the camera so the agent points at the right spot
+      if (pick === 0) agentTo(w2sX(c.tx + c.w / 2), w2sY(c.ty - 26));
+      else if (pick === 1) { nudgeCard(c); agentTo(w2sX(c.tx + c.w / 2), w2sY(c.ty + 30)); }
+      else agentTo(120 + Math.random() * (W - 240), 150 + Math.random() * (H - 340));
+    }
+    setInterval(function () {
+      if (!done) return;
+      var idle = performance.now() - lastInteract;
+      if (idle < 4500) return;
+      idleBehavior();
+      if (idle > 12000) showNudge();
+    }, 2800);
+
+    function celebrate(x, y) {
+      var colors = ["#6c7cff", "#ff9f45", "#4bd6a0", "#8b78ff", "#eef0f5"];
+      for (var i = 0; i < 12; i++) {
+        var b = document.createElement("div");
+        b.style.cssText = "position:absolute;width:7px;height:7px;border-radius:2px;z-index:31;pointer-events:none;left:" + x + "px;top:" + y + "px;background:" + colors[i % colors.length];
+        stage.appendChild(b);
+        var ang = Math.random() * Math.PI * 2, sp = 40 + Math.random() * 90;
+        var dx = Math.cos(ang) * sp, dy = Math.sin(ang) * sp - 40;
+        b.animate([{ transform: "translate(0,0)", opacity: 1 }, { transform: "translate(" + dx + "px," + (dy + 130) + "px) rotate(" + (Math.random() * 360) + "deg)", opacity: 0 }], { duration: 900 + Math.random() * 400, easing: "cubic-bezier(0.2,0.7,0.3,1)" });
+        (function (n) { setTimeout(function () { n.remove(); }, 1500); })(b);
+      }
+    }
+
+    // ---- commands ----
+    function setStatus(s) { statusText.innerHTML = s; }
+    function cmdTidy() { setStatus("tidying layout…"); layout(); cards.forEach(function (c) { if (c.off) return; c.mode = "spring"; c.el.classList.remove("dimmed"); }); T(function () { if (done) setStatus("ready ✦"); }, 800); }
+    function cmdFilter(kind) {
+      var vis = cards.filter(function (c) { return !c.off; });
+      var matches = vis.filter(function (c) { return kind === "ai" ? c.ai : !c.ai; });
+      var others = vis.filter(function (c) { return matches.indexOf(c) === -1; });
+      if (!matches.length) { setStatus("no AI projects tagged yet — showing all"); cmdTidy(); return; }
+      setStatus("surfacing the <b>AI &amp; ML work</b>…");
+      var cw = cards[0].w, gap = 24;
+      var rowW = matches.length * cw + (matches.length - 1) * gap;
+      var sx = Math.max(16, (W - rowW) / 2), sy = Math.max(120, H * 0.3);
+      matches.forEach(function (c, i) { c.tx = sx + i * (cw + gap); c.ty = sy; c.trot = 0; c.mode = "spring"; c.el.classList.remove("dimmed"); c.el.style.zIndex = ++zTop + 5; });
+      others.forEach(function (c, i) { var side = i % 2 === 0 ? -1 : 1; c.tx = side < 0 ? 20 + i * 16 : W - c.w - 20 - i * 12; c.ty = H - c.h - 30 - (i % 2) * 40; c.trot = side * (6 + i); c.mode = "spring"; c.el.classList.add("dimmed"); });
+      agentTo(W / 2, sy - 34);
+      celebrate(W / 2, sy - 20);
+      T(function () { setStatus("here's the <b>AI work</b> ✦ — click one, or Tidy up"); }, 900);
+    }
+
+    hero.querySelectorAll(".hc-chip").forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        var cmd = chip.getAttribute("data-cmd");
+        if (cmd === "ai") cmdFilter("ai"); else cmdTidy();
+      });
+    });
+    document.getElementById("hcPromptInput").addEventListener("keydown", function (e) {
+      if (e.key !== "Enter") return;
+      noteInteract();
+      var v = e.target.value.toLowerCase(); e.target.value = "";
+      if (/ai|ml|agent|model/.test(v)) cmdFilter("ai"); else cmdTidy();
+    });
+
+    // ---- custom "you" cursor: document-fixed, state-aware, drawn over everything ----
+    var grabbing = false;
+    document.addEventListener("pointermove", function (e) {
+      youEl.style.transform = "translate3d(" + (e.clientX + 1) + "px," + (e.clientY + 1) + "px,0)";
+      // if the user's cursor meets the agent, it "acknowledges" with a quick little loop
+      if (done && !ag.ack) {
+        var sr = stageRect();
+        var dx = e.clientX - sr.left - ag.x, dy = e.clientY - sr.top - ag.y;
+        if (dx * dx + dy * dy < 32 * 32 && performance.now() > (ag.ackCoolUntil || 0)) {
+          ag.ackCx = ag.x; ag.ackCy = ag.y;
+          ag.ackStart = performance.now();
+          ag.ack = true;
+          ag.ackCoolUntil = performance.now() + 2600;
+        }
+      }
+      if (grabbing) { youEl.setAttribute("data-state", "grabbing"); return; }
+      var t = e.target, st = "default";
+      if (t && t.closest) {
+        if (t.closest("input, textarea")) st = "text";
+        else if (t.closest(".hc-frame")) st = "grab";
+        else if (t.closest("a,button,.hc-chip,.hc-nudge,.fn-link,.fn-home")) st = "point";
+      }
+      youEl.setAttribute("data-state", st);
+    });
+    // Only own the cursor while the hero is substantially in view; native cursor
+    // returns once you scroll into the work section.
+    if ("IntersectionObserver" in window) {
+      var cursorIO = new IntersectionObserver(
+        function (es) {
+          es.forEach(function (e) {
+            var on = e.isIntersecting && e.intersectionRatio > 0.5;
+            document.body.classList.toggle("canvas-cursor", on);
+            youEl.classList.toggle("on", on);
+          });
+        },
+        { threshold: [0, 0.5, 1] },
+      );
+      cursorIO.observe(hero);
+    }
+
+    // ---- pan + zoom ----
+    var panning = false, panSX = 0, panSY = 0, panOX = 0, panOY = 0;
+    stage.addEventListener("pointerdown", function (e) {
+      if (!done) return;
+      if (e.target.closest(".hc-frame")) return; // frame drag owns this
+      panning = true; grabbing = true;
+      panSX = e.clientX; panSY = e.clientY; panOX = panX; panOY = panY;
+      try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    stage.addEventListener("pointermove", function (e) {
+      if (!panning) return;
+      panX = panOX + (e.clientX - panSX);
+      panY = panOY + (e.clientY - panSY);
+      applyCamera();
+    });
+    function endPan() { if (panning) { panning = false; grabbing = false; } }
+    stage.addEventListener("pointerup", endPan);
+    stage.addEventListener("pointercancel", endPan);
+    // pinch / ctrl+wheel zooms toward the cursor; plain wheel still scrolls the page
+    stage.addEventListener("wheel", function (e) {
+      if (!done || !(e.ctrlKey || e.metaKey)) return;
+      e.preventDefault();
+      var sr = stageRect();
+      zoomAt(e.clientX - sr.left, e.clientY - sr.top, zoom * (1 - e.deltaY * 0.0015));
+    }, { passive: false });
+    document.getElementById("hcZoomIn").addEventListener("click", function () { zoomAt(W / 2, H / 2, zoom * 1.2); });
+    document.getElementById("hcZoomOut").addEventListener("click", function () { zoomAt(W / 2, H / 2, zoom / 1.2); });
+    document.getElementById("hcZoomFit").addEventListener("click", resetCamera);
+
+    // ---- cold-open ----
+    function typeName(cb) {
+      nameEl.textContent = ""; nameEl.appendChild(caret); caret.style.display = "inline-block";
+      var idx = 0;
+      (function step() {
+        nameEl.textContent = NAME.slice(0, idx); nameEl.appendChild(caret);
+        if (idx <= NAME.length) { idx++; T(step, NAME[idx - 2] === " " ? 120 : (50 + Math.random() * 55)); }
+        else { caret.style.display = "none"; if (cb) cb(); }
+      })();
+    }
+    function spawn(c) { c.x = ag.x - 20; c.y = ag.y - 10; c.sc = 0.2; c.rot = c.jr; c.mode = "spring"; }
+
+    function runIntro() {
+      hero.querySelector(".hc-kicker").style.opacity = "1";
+      setStatus("reading <b>Lucas</b>'s work…");
+      agentTo(W * 0.22, H * 0.4);
+      // start typing right away; fade the subcopy in once the greeting is done
+      T(function () { typeName(function () { if (subEl) subEl.classList.remove("hc-hidden"); }); }, 150);
+      T(function () { setStatus("found <b>" + cards.length + "</b> projects · prioritizing <b>AI</b>"); }, 1500);
+      var vis = cards.filter(function (c) { return !c.off; });
+      var base = 2100, stagger = 260;
+      vis.forEach(function (c, n) {
+        T(function () { agentTo(c.tx + c.w / 2, c.ty + 20); setStatus(c.ai ? "placing <b>" + c.el.querySelector('.hc-title').textContent + "</b> · AI" : "placing " + c.el.querySelector('.hc-title').textContent); T(function () { spawn(c); }, 120); }, base + n * stagger);
+      });
+      var end = base + vis.length * stagger + 300;
+      T(function () { setStatus("tidying layout…"); agentTo(W * 0.5, H * 0.5); }, end);
+      T(finishIntro, end + 700);
+    }
+    function finishIntro() {
+      done = true;
+      layout();
+      setStatus("ready ✦");
+      agentTo(W - 150, H - 150);
+      promptEl.classList.add("show");
+      hintEl.classList.add("show");
+      var scrollEl = document.getElementById("hcScroll");
+      if (scrollEl) scrollEl.classList.add("show");
+      var zoomEl = document.getElementById("hcZoom");
+      if (zoomEl) zoomEl.classList.add("show");
+    }
+
+    window.addEventListener("resize", function () { layout(); if (done) cards.forEach(function (c) { if (c.mode === "free") c.mode = "spring"; }); });
+
+    cards.forEach(function (c) { c.el.style.transform = "translate3d(-9999px,0,0)"; });
+    T(runIntro, 350);
+  })();
+</script>

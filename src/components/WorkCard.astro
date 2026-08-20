@@ -1,0 +1,81 @@
+---
+interface Props {
+  href: string;
+  title: string;
+  summary: string;
+  company?: string;
+  timeline: string;
+  tags: string[];
+  cover?: string;
+  coverAlt?: string;
+}
+const { href, title, summary, company, timeline, tags, cover, coverAlt } = Astro.props;
+---
+
+<a class="card" href={href}>
+  <div class="media">
+    {
+      cover ? (
+        <img src={cover} alt={coverAlt ?? title} loading="lazy" />
+      ) : (
+        <div class="cover-placeholder">{title}</div>
+      )
+    }
+  </div>
+  <div class="body">
+    <div class="meta">
+      {company && <span>{company}</span>}
+      <span>{timeline}</span>
+    </div>
+    <h3>{title}</h3>
+    <p class="muted">{summary}</p>
+    <ul class="tags">
+      {tags.map((t) => <li class="tag">{t}</li>)}
+    </ul>
+  </div>
+</a>
+
+<style>
+  .card {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--surface);
+    transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.2s ease;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+    border-color: transparent;
+  }
+  .media img,
+  .media .cover-placeholder {
+    aspect-ratio: 16 / 10;
+    width: 100%;
+    object-fit: cover;
+    border-radius: 0;
+  }
+  .body {
+    padding: var(--space-m);
+  }
+  .meta {
+    display: flex;
+    gap: var(--space-s);
+    font-size: var(--step--1);
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+  }
+  .body h3 {
+    font-size: var(--step-1);
+    margin-bottom: 0.4rem;
+  }
+  .tags {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: var(--space-s);
+  }
+</style>

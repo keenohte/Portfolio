@@ -1,0 +1,100 @@
+---
+import { site, nav } from "../config";
+const path = Astro.url.pathname;
+const initials = site.name
+  .split(/\s+/)
+  .map((w) => w[0])
+  .slice(0, 2)
+  .join("")
+  .toUpperCase();
+const isActive = (href: string) => href !== "/#work" && path.startsWith(href);
+---
+
+<nav class="floatnav" aria-label="Primary">
+  <a class="fn-home" href="/" aria-label={`${site.name} — home`}>
+    <span class="fn-avatar">{initials}</span>
+  </a>
+  <div class="fn-pill">
+    {
+      nav.map((item) => (
+        <a
+          class="fn-link"
+          href={item.href}
+          aria-current={isActive(item.href) ? "page" : undefined}
+        >
+          {item.label}
+        </a>
+      ))
+    }
+  </div>
+</nav>
+
+<style>
+  .floatnav {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: calc(100vw - 24px);
+  }
+
+  .fn-home {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 62%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.6);
+    transition: transform 0.15s ease, border-color 0.2s ease;
+  }
+  .fn-home:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+  .fn-avatar {
+    width: 34px; height: 34px; border-radius: 999px;
+    display: grid; place-items: center;
+    font-family: var(--font-mono);
+    font-size: 12px; font-weight: 500; color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  }
+
+  .fn-pill {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 6px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 62%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.6);
+  }
+  .fn-link {
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: var(--step--1);
+    font-weight: 500;
+    color: var(--text-muted);
+    white-space: nowrap;
+    transition: color 0.18s ease, background 0.18s ease;
+  }
+  .fn-link:hover { color: var(--text); background: color-mix(in srgb, var(--text) 8%, transparent); }
+  .fn-link[aria-current="page"] {
+    color: var(--text);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  }
+
+  @media (max-width: 460px) {
+    .fn-link { padding: 8px 12px; }
+    .fn-home { width: 44px; height: 44px; }
+  }
+</style>

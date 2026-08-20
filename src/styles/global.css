@@ -1,0 +1,173 @@
+/* ============================================================
+   Design system — "Co-op" identity (dark, design-tool world).
+   Repoint these tokens to reskin the whole site at once.
+   ============================================================ */
+:root {
+  /* Type roles */
+  --font-sans: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Bricolage Grotesque", var(--font-sans);
+  --font-serif: var(--font-display); /* legacy alias: pages using --font-serif get the display face */
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* Fluid type scale */
+  --step--1: clamp(0.8rem, 0.78rem + 0.12vw, 0.88rem);
+  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.1rem);
+  --step-1: clamp(1.2rem, 1.1rem + 0.5vw, 1.5rem);
+  --step-2: clamp(1.55rem, 1.35rem + 1vw, 2.1rem);
+  --step-3: clamp(2rem, 1.6rem + 2vw, 3rem);
+  --step-4: clamp(2.6rem, 1.9rem + 3.4vw, 4.8rem);
+
+  /* Spacing */
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-s: 1rem;
+  --space-m: 1.5rem;
+  --space-l: 2.5rem;
+  --space-xl: 4rem;
+  --space-2xl: 6rem;
+
+  --radius: 14px;
+  --radius-lg: 22px;
+  --maxw: 1120px;
+  --maxw-prose: 68ch;
+
+  /* Palette — committed dark (mirrors the approved prototype) */
+  --ink: #0e1016;
+  --bg: #0e1016;
+  --surface: #161922;
+  --surface-2: #1d212c;
+  --line: #2b3140;
+  --line-soft: #1e2430;
+  --dot: #232a38;
+  --text: #eef0f5;
+  --text-muted: #8b93a6;
+  --faint: #79839a; /* lightened for AA contrast (5:1 on bg) */
+  --border: var(--line);
+
+  --accent: #6c7cff;      /* agent / brand */
+  --accent-2: #8b78ff;
+  --human: #ff9f45;       /* the "you" accent */
+  --good: #4bd6a0;
+  --accent-contrast: #0e1016;
+
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 18px 40px -12px rgba(0, 0, 0, 0.7);
+}
+
+/* ============================================================
+   Reset + base
+   ============================================================ */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+* { margin: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-sans);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+img, picture, svg { display: block; max-width: 100%; height: auto; }
+a { color: inherit; text-decoration: none; }
+h1, h2, h3, h4 {
+  line-height: 1.05;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+code { font-family: var(--font-mono); font-size: 0.9em; }
+
+/* ============================================================
+   Layout helpers
+   ============================================================ */
+.wrap {
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding-inline: var(--space-m);
+}
+.prose { max-width: var(--maxw-prose); }
+.section { padding-block: var(--space-2xl); }
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  font-weight: 500;
+}
+.muted { color: var(--text-muted); }
+
+/* ============================================================
+   Buttons + tags
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.2rem;
+  border-radius: 999px;
+  font-weight: 500;
+  font-size: var(--step--1);
+  border: 1px solid var(--line);
+  color: var(--text);
+  background: var(--surface);
+  transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.btn:hover { transform: translateY(-1px); border-color: var(--accent); }
+.btn--primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.btn--primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
+.btn--ghost { background: transparent; }
+.tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+}
+
+/* gradient placeholder when a case study has no cover image yet */
+.cover-placeholder {
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 55%, #b26bff 100%);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: var(--space-m);
+  text-align: center;
+}
+
+/* When the canvas hero owns the pointer, hide the native cursor everywhere
+   (including the floating nav) — a custom cursor is drawn on top instead.
+   Toggled on/off by scroll position, so the rest of the site keeps its cursor. */
+body.canvas-cursor,
+body.canvas-cursor * {
+  cursor: none !important;
+}
+
+/* Accessibility: visible focus */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}

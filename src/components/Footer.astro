@@ -1,0 +1,73 @@
+---
+import { site } from "../config";
+const year = 2026; // static: bump when you like, or wire to build date
+---
+
+<footer class="site-footer">
+  <div class="wrap inner">
+    <div>
+      <p class="cta">Let's work together.</p>
+      <a class="email" href={`mailto:${site.email}`}>{site.email}</a>
+    </div>
+    <ul class="socials">
+      {
+        site.socials.map((s) => (
+          <li>
+            <a href={s.href} target="_blank" rel="noopener noreferrer">
+              {s.label} ↗
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+  <div class="wrap copyright">
+    <span>© {year} {site.name}</span>
+    <span class="muted">Built with Astro</span>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding-block: var(--space-xl) var(--space-l);
+    margin-top: var(--space-2xl);
+  }
+  .inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-l);
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .cta {
+    font-family: var(--font-serif);
+    font-size: var(--step-2);
+    margin-bottom: 0.25rem;
+  }
+  .email {
+    color: var(--accent);
+    font-size: var(--step-1);
+  }
+  .socials {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+    text-align: right;
+  }
+  .socials a {
+    color: var(--text-muted);
+    transition: color 0.2s ease;
+  }
+  .socials a:hover {
+    color: var(--text);
+  }
+  .copyright {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--space-l);
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+</style>

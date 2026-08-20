@@ -1,0 +1,150 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { site } from "../config";
+
+// Edit these freely — they're the content of the page.
+const bio = [
+  "Write a few paragraphs in your own voice. Where you are, the kinds of problems you like, and how you got into design. Keep it human — this is the page where people decide whether they'd enjoy working with you.",
+  "A second paragraph can cover your background and the domains you've worked in. If AI product design is your focus, say so plainly here and point to the work that proves it.",
+];
+
+// Principles are not a sequence, so no numbering — just a set.
+const principles = [
+  { title: "Start from the problem", body: "Every decision traces back to a user insight, not a preference. I earn the solution." },
+  { title: "Systems over screens", body: "I design the tokens, patterns, and rules — so the hundredth screen is as considered as the first." },
+  { title: "Design for trust in AI", body: "When software makes decisions, people need to see why. I make the model legible and keep humans in the loop." },
+  { title: "Sweat the motion", body: "The difference between fine and delightful lives in easing, feedback, and the details you feel more than see." },
+];
+
+const experience = [
+  { role: "Senior Product Designer", org: "Company", period: "2023 — Present" },
+  { role: "Product Designer", org: "Company", period: "2020 — 2023" },
+  { role: "UX Designer", org: "Company", period: "2018 — 2020" },
+];
+
+const skills = [
+  "Product design", "AI / ML product", "UX research", "Interaction design",
+  "Design systems", "Prototyping", "Motion", "Figma",
+];
+---
+
+<BaseLayout title="About" description={site.intro}>
+  <section class="wrap about-hero">
+    <div class="about-intro">
+      <p class="eyebrow">About</p>
+      <h1>{site.intro}</h1>
+      <div class="about-actions">
+        <a class="btn btn--primary" href={site.resumeUrl}>Résumé ↗</a>
+        <a class="btn btn--ghost" href="/contact">Get in touch</a>
+      </div>
+    </div>
+    <figure class="about-portrait">
+      <div class="portrait-ph" aria-hidden="true"><span>Your photo</span></div>
+      <figcaption class="muted">{site.location}</figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap about-bio prose">
+    {bio.map((p) => <p>{p}</p>)}
+  </section>
+
+  <section class="wrap about-section">
+    <h2 class="eyebrow">How I work</h2>
+    <div class="principle-grid">
+      {
+        principles.map((p) => (
+          <div class="principle">
+            <h3>{p.title}</h3>
+            <p class="muted">{p.body}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="wrap about-section two-col">
+    <div>
+      <h2 class="eyebrow">Experience</h2>
+      <ul class="timeline">
+        {
+          experience.map((e) => (
+            <li>
+              <span class="role">{e.role}</span>
+              <span class="muted">{e.org} · {e.period}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+    <div>
+      <h2 class="eyebrow">Skills</h2>
+      <ul class="chips">
+        {skills.map((s) => <li class="tag">{s}</li>)}
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .about-hero {
+    display: grid;
+    grid-template-columns: 1.4fr 0.9fr;
+    gap: var(--space-2xl);
+    align-items: center;
+    padding-block: var(--space-l) var(--space-2xl);
+  }
+  .about-intro h1 {
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    line-height: 1.05;
+    margin-block: var(--space-s) var(--space-l);
+    max-width: 20ch;
+  }
+  .about-actions { display: flex; gap: var(--space-s); flex-wrap: wrap; }
+
+  .about-portrait { margin: 0; }
+  .portrait-ph {
+    aspect-ratio: 4 / 5;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(150deg, var(--surface-2), var(--surface));
+    border: 1px solid var(--line);
+    display: grid;
+    place-items: center;
+    color: var(--faint);
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+  }
+  .about-portrait figcaption {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    margin-top: var(--space-xs);
+  }
+
+  .about-bio {
+    font-size: var(--step-1);
+    line-height: 1.7;
+    margin-bottom: var(--space-2xl);
+  }
+  .about-bio p { margin-bottom: var(--space-m); }
+
+  .about-section { padding-block: var(--space-l); border-top: 1px solid var(--line); }
+  .principle-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-l);
+    margin-top: var(--space-l);
+  }
+  .principle h3 { font-size: var(--step-1); margin-bottom: var(--space-2xs); }
+  .principle p { max-width: 44ch; line-height: 1.6; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2xl); }
+  .timeline { list-style: none; padding: 0; display: grid; gap: var(--space-m); margin-top: var(--space-l); }
+  .timeline .role { display: block; font-weight: 500; font-size: var(--step-0); }
+  .chips { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: var(--space-l); }
+
+  @media (max-width: 800px) {
+    .about-hero { grid-template-columns: 1fr; gap: var(--space-l); }
+    .about-portrait { max-width: 320px; }
+    .principle-grid, .two-col { grid-template-columns: 1fr; gap: var(--space-l); }
+  }
+</style>
