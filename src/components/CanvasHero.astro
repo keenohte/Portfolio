@@ -2,9 +2,11 @@
 import { getCollection } from "astro:content";
 import { site, link } from "../config";
 
-const projects = (await getCollection("work", ({ data }) => !data.draft)).sort(
-  (a, b) => a.data.order - b.data.order,
-);
+// The hero canvas shows a CURATED set — featured projects only, capped at 4.
+// The full list lives in the "All work" section below.
+const projects = (await getCollection("work", ({ data }) => !data.draft && data.featured))
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 4);
 
 function thumbKind(p: (typeof projects)[number]) {
   const tags = p.data.tags.map((t) => t.toLowerCase());
@@ -18,10 +20,11 @@ const frames = projects.map((p, i) => ({
   i,
   slug: p.id,
   title: p.data.title,
-  kind: p.data.tags[0] || p.data.role,
-  blurb: p.data.summary,
+  role: p.data.role,
   ai: p.data.ai,
   thumb: thumbKind(p),
+  cover: p.data.cover,
+  video: p.data.video,
 }));
 ---
 
@@ -61,21 +64,25 @@ const frames = projects.map((p, i) => ({
           href={link(`work/${f.slug}`)}
           data-i={f.i}
           data-ai={f.ai ? "1" : "0"}
-          data-thumb={f.thumb}
           tabindex="-1"
           aria-label={`Open case study: ${f.title}`}
         >
           <span class="hc-label">Frame {f.i + 1}{f.ai ? " · AI" : ""}</span>
-          <span class="hc-open" aria-hidden="true">Open ↗</span>
-          <span class="hc-thumb" data-thumb={f.thumb}>
-            <span class="hc-glyph">{f.ai ? "◍ agent" : f.thumb === "craft" ? "✳ craft" : f.thumb === "sys" ? "◇ system" : "→ flow"}</span>
+          <span class="hc-media" data-thumb={f.thumb}>
+            {
+              f.video ? (
+                <video class="hc-vid" muted loop playsinline preload="metadata" poster={f.cover}>
+                  <source src={f.video} />
+                </video>
+              ) : f.cover ? (
+                <img src={f.cover} alt="" />
+              ) : null
+            }
           </span>
-          <span class="hc-meta">
-            <span class="hc-row">
-              <span class="hc-title">{f.title}</span>
-              <span class="chip-kind">{f.kind}</span>
-            </span>
-            <span class="hc-blurb">{f.blurb}</span>
+          <span class="hc-open" aria-hidden="true">Open ↗</span>
+          <span class="hc-foot">
+            <span class="hc-name">{f.title}</span>
+            <span class="hc-role">{f.role}</span>
           </span>
         </a>
       ))
@@ -233,64 +240,97 @@ const frames = projects.map((p, i) => ({
   .hc-zbtn:hover { color: var(--text); background: color-mix(in srgb, var(--text) 8%, transparent); }
   .hc-zfit { font-size: 13px; }
 
+  /* Media-forward card: a big cover (image / muted video / gradient) with a
+     name always visible in the footer and the role + "Open" revealed on hover. */
   .hc-frame {
     position: absolute; top: 0; left: 0;
-    width: 250px;
-    border-radius: var(--radius);
+    width: 340px;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-lg);
     background: var(--surface);
     border: 1px solid var(--line);
     box-shadow: var(--shadow);
     z-index: 5;
-    color: var(--text);
+    color: #fff;
     text-decoration: none;
     display: block;
+    overflow: hidden;
+    transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.28s ease, border-color 0.2s ease;
+    will-change: transform;
+  }
+  .hc-frame:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 48px -18px rgba(0, 0, 0, 0.45), var(--shadow);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    z-index: 8;
   }
   .hc-frame:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-  .hc-frame.dimmed { opacity: 0.26; filter: saturate(0.4); }
+  .hc-frame.dimmed { opacity: 0.32; filter: saturate(0.5); }
   .hc-label {
     position: absolute; top: -22px; left: 2px;
     font-family: var(--font-mono); font-size: 11px; color: var(--faint); white-space: nowrap;
   }
   .hc-frame.hot .hc-label { color: var(--accent); }
+
+  /* the full-bleed media layer */
+  .hc-media {
+    position: absolute; inset: 0; z-index: 0;
+    display: block; overflow: hidden;
+  }
+  .hc-media img, .hc-media .hc-vid {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+    transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .hc-frame:hover .hc-media img, .hc-frame:hover .hc-media .hc-vid { transform: scale(1.05); }
+  /* gradient placeholder until a real cover/video is supplied */
+  .hc-media[data-thumb="ai"] { background: linear-gradient(135deg, #2a2f66, #3a2f7a 55%, #202544); }
+  .hc-media[data-thumb="sys"] { background: linear-gradient(135deg, #163a3a, #1e4f4a); }
+  .hc-media[data-thumb="ux"] { background: linear-gradient(135deg, #3a2a44, #522f52); }
+  .hc-media[data-thumb="craft"] { background: linear-gradient(120deg, #ff9f45, #ff6b6b 45%, #6c7cff); }
+  .hc-media::after {
+    content: ""; position: absolute; inset: 0; z-index: 1;
+    background-image: radial-gradient(rgba(255,255,255,0.12) 1px, transparent 1px);
+    background-size: 18px 18px; opacity: 0.45; pointer-events: none;
+  }
+  /* readability scrim under the footer text */
+  .hc-frame::after {
+    content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(to top, rgba(8, 9, 14, 0.72) 0%, rgba(8, 9, 14, 0.28) 26%, transparent 52%);
+  }
+
   .hc-open {
-    position: absolute; top: 9px; right: 9px; z-index: 3;
+    position: absolute; top: 12px; right: 12px; z-index: 3;
     font-size: 11.5px; font-weight: 500; color: #fff;
-    background: rgba(14, 16, 22, 0.66);
+    background: rgba(14, 16, 22, 0.55);
     -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    padding: 5px 9px; border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    padding: 5px 10px; border-radius: 999px;
     opacity: 0; transform: translateY(-4px);
-    transition: opacity 0.16s ease, transform 0.16s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
   }
   .hc-frame:hover .hc-open, .hc-frame:focus-visible .hc-open { opacity: 1; transform: none; }
-  .hc-thumb {
-    display: grid; place-items: center;
-    height: 120px; border-radius: 12px 12px 0 0; position: relative; overflow: hidden;
+
+  .hc-foot {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 16px 18px;
   }
-  .hc-thumb[data-thumb="ai"] { background: linear-gradient(135deg, #2a2f66, #3a2f7a 55%, #202544); }
-  .hc-thumb[data-thumb="sys"] { background: linear-gradient(135deg, #163a3a, #1e4f4a); }
-  .hc-thumb[data-thumb="ux"] { background: linear-gradient(135deg, #3a2a44, #522f52); }
-  .hc-thumb[data-thumb="craft"] { background: linear-gradient(120deg, #ff9f45, #ff6b6b 45%, #6c7cff); }
-  .hc-thumb::after {
-    content: ""; position: absolute; inset: 0;
-    background-image: radial-gradient(rgba(255,255,255,0.14) 1px, transparent 1px);
-    background-size: 16px 16px; opacity: 0.5;
+  .hc-name {
+    font-family: var(--font-display);
+    font-size: 21px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.1;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
   }
-  .hc-glyph { font-family: var(--font-mono); font-size: 12px; color: rgba(255,255,255,0.8); letter-spacing: 0.08em; text-transform: uppercase; z-index: 1; }
-  .hc-meta { display: block; padding: 16px; }
-  .hc-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-  .hc-title {
-    font-size: 16px; font-weight: 600; letter-spacing: -0.01em;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  .hc-role {
+    font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.85);
+    opacity: 0; max-height: 0; overflow: hidden;
+    transform: translateY(4px);
+    transition: opacity 0.22s ease, max-height 0.22s ease, transform 0.22s ease;
   }
-  .chip-kind {
-    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.05em; color: var(--text-muted);
-    border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; white-space: nowrap;
-    flex: none; max-width: 42%; overflow: hidden; text-overflow: ellipsis;
+  .hc-frame:hover .hc-role, .hc-frame:focus-visible .hc-role {
+    opacity: 1; max-height: 2.4em; transform: none;
   }
-  .hc-frame.hot .chip-kind { color: var(--accent); border-color: rgba(108,124,255,0.4); }
-  .hc-blurb { display: block; font-size: 12.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.45;
-    -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
 
   .hc-status {
     position: absolute; left: 16px; bottom: 18px; z-index: 6;
@@ -475,10 +515,12 @@ const frames = projects.map((p, i) => ({
   }
   .hero-canvas.hc-lite .hc-frame {
     position: relative; top: auto; left: auto;
-    width: auto; flex: 0 0 78%; max-width: 300px;
+    width: auto; flex: 0 0 82%; max-width: 320px;
     scroll-snap-align: center;
     opacity: 0; transform: translateY(16px);
   }
+  /* no hover on touch — reveal the role by default so the card isn't just a name */
+  .hero-canvas.hc-lite .hc-role { opacity: 1; max-height: 2.4em; transform: none; }
   .hero-canvas.hc-lite.hc-cards-in .hc-frame { animation: hcCardIn 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
   @keyframes hcCardIn { to { opacity: 1; transform: none; } }
   .hero-canvas.hc-lite.hc-cards-in .hc-frame:nth-child(1) { animation-delay: 0s; }
@@ -592,6 +634,14 @@ const frames = projects.map((p, i) => ({
       };
     });
 
+    // Muted card videos play only while hovered (saves battery, avoids 4 loops at once).
+    frameEls.forEach(function (el) {
+      var v = el.querySelector(".hc-vid");
+      if (!v) return;
+      el.addEventListener("mouseenter", function () { try { v.play(); } catch (e) {} });
+      el.addEventListener("mouseleave", function () { try { v.pause(); } catch (e) {} });
+    });
+
     var W = 0, H = 0, zTop = 10, done = false;
     var timers = [];
     function T(fn, ms) { var id = setTimeout(fn, ms); timers.push(id); return id; }
@@ -621,36 +671,36 @@ const frames = projects.map((p, i) => ({
 
     function layout() {
       W = stage.clientWidth; H = stage.clientHeight;
-      var cw = W < 640 ? 200 : (W < 960 ? 220 : 248);
-      var gap = W < 640 ? 16 : 24;
-      // show all first, measure the true card height
-      cards.forEach(function (c) { c.el.style.display = ""; c.w = cw; c.el.style.width = cw + "px"; });
-      var cardH = 200;
-      cards.forEach(function (c) { cardH = Math.max(cardH, c.el.offsetHeight); });
-      cards.forEach(function (c) { c.h = cardH; });
+      var gap = W < 640 ? 16 : 26;
+      // Curated hero: a small fixed set (<=4). Always show every card — the canvas
+      // pans/zooms, so nothing needs hiding. Cards keep a 4:3 aspect (height = w * 3/4).
+      var cols = W < 720 ? 1 : 2;
+      var rows = Math.ceil(cards.length / cols);
       // available band between the headline and the prompt
       var hl = hero.querySelector(".hc-headline").getBoundingClientRect();
       var sr = stageRect();
-      var bandTop = (hl.bottom - sr.top) + 36;
+      var bandTop = (hl.bottom - sr.top) + 32;
       var promptH = promptEl.offsetHeight || 92;
-      var bandBottom = H - promptH - 56;
-      var band = Math.max(cardH, bandBottom - bandTop);
-      // fit only what the space cleanly holds; the rest live in the linear list below
-      var cols = Math.min(3, Math.max(1, Math.floor((W - 32 + gap) / (cw + gap))));
-      var rowsFit = Math.max(1, Math.floor((band + gap) / (cardH + gap)));
-      var maxShown = Math.min(cards.length, Math.max(cols, cols * rowsFit));
-      cards.forEach(function (c, i) {
-        c.off = i >= maxShown;
-        if (c.off) { c.el.style.display = "none"; c.mode = "hidden"; }
+      var bandBottom = H - promptH - 48;
+      var band = Math.max(240, bandBottom - bandTop);
+      // size a card so the whole grid fits the band, then cap so it stays comfortable
+      var maxByH = (band - (rows - 1) * gap) / rows;      // height budget per row
+      var maxByW = (W - 32 - (cols - 1) * gap) / cols;    // width budget per col
+      var cwMax = W < 640 ? 300 : (W < 960 ? 340 : 380);
+      var cw = Math.min(cwMax, maxByW, maxByH * (4 / 3));
+      cw = Math.max(200, cw);
+      var cardH = cw * (3 / 4);
+      cards.forEach(function (c) {
+        c.el.style.display = ""; c.off = false;
+        c.w = cw; c.h = cardH;
+        c.el.style.width = cw + "px";
       });
-      var shown = cards.filter(function (c) { return !c.off; });
-      var rows = Math.ceil(shown.length / cols);
       var gridW = cols * cw + (cols - 1) * gap;
       var gridH = rows * cardH + (rows - 1) * gap;
       var startX = Math.max(16, (W - gridW) / 2);
       var startY = bandTop + Math.max(0, (bandBottom - bandTop - gridH) / 2);
       if (startY < bandTop) startY = bandTop;
-      shown.forEach(function (c, i) {
+      cards.forEach(function (c, i) {
         var col = i % cols, row = Math.floor(i / cols);
         c.tx = startX + col * (cw + gap);
         c.ty = startY + row * (cardH + gap);
@@ -938,7 +988,7 @@ const frames = projects.map((p, i) => ({
       var vis = cards.filter(function (c) { return !c.off; });
       var base = 2100, stagger = 260;
       vis.forEach(function (c, n) {
-        T(function () { agentTo(c.tx + c.w / 2, c.ty + 20); setStatus(c.ai ? "placing <b>" + c.el.querySelector('.hc-title').textContent + "</b> · AI" : "placing " + c.el.querySelector('.hc-title').textContent); T(function () { spawn(c); }, 120); }, base + n * stagger);
+        T(function () { agentTo(c.tx + c.w / 2, c.ty + 20); setStatus(c.ai ? "placing <b>" + c.el.querySelector('.hc-name').textContent + "</b> · AI" : "placing " + c.el.querySelector('.hc-name').textContent); T(function () { spawn(c); }, 120); }, base + n * stagger);
       });
       var end = base + vis.length * stagger + 300;
       T(function () { setStatus("tidying layout…"); agentTo(W * 0.5, H * 0.5); }, end);

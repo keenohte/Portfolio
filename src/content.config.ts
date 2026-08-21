@@ -18,9 +18,10 @@ const work = defineCollection({
     timeline: z.string(), // e.g. "2024 · 3 months"
     tags: z.array(z.string()).default([]), // e.g. ["UX", "Design System"]
 
-    // --- cover image (optional). Put images in /public/work/ and reference as "/work/foo.jpg" ---
+    // --- cover image + optional card video. Put files in /public/work/ and reference as "/work/foo.jpg" ---
     cover: z.string().optional(),
     coverAlt: z.string().optional(),
+    video: z.string().optional(), // optional muted-loop card video (plays on hover on desktop); cover is its poster
 
     // --- case-study "TL;DR" band (all optional; sensible fallbacks) ---
     problem: z.string().optional(), // one-line problem statement (falls back to summary)
