@@ -34,14 +34,12 @@ const frames = projects.map((p, i) => ({
     <p class="hc-subcopy" id="hcSub">{site.tagline}</p>
   </div>
   <script is:inline>
-    /* Before first paint (only in the animated path): empty the greeting so the typing
-       animation starts from scratch, and hide the subcopy so it can fade in afterward. */
+    /* Before first paint (whenever motion is allowed — desktop OR mobile): empty the
+       greeting so the typing animation starts from scratch, and hide the subcopy so it
+       can fade in afterward. Reduced-motion users keep the greeting/subcopy visible. */
     (function () {
       try {
-        if (
-          matchMedia("(pointer: fine)").matches &&
-          !matchMedia("(prefers-reduced-motion: reduce)").matches
-        ) {
+        if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
           var h = document.getElementById("hcName");
           if (h) { var c = h.querySelector(".hc-caret"); h.textContent = ""; if (c) h.appendChild(c); }
           var s = document.getElementById("hcSub");
@@ -175,7 +173,7 @@ const frames = projects.map((p, i) => ({
   .hc-headline h1 {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: clamp(38px, 7vw, 88px);
+    font-size: clamp(50px, 8vw, 88px);
     line-height: 0.94;
     letter-spacing: -0.03em;
   }
@@ -344,7 +342,7 @@ const frames = projects.map((p, i) => ({
 
   .hc-peer { position: absolute; top: 0; left: 0; z-index: 30; pointer-events: none; will-change: transform; }
   .hc-peer svg { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
-  .hc-peer .hc-tag { display: inline-block; font-family: var(--font-mono); font-size: 11px; color: #fff; padding: 3px 7px; border-radius: 4px 8px 8px 8px; margin: 14px 0 0 -2px; white-space: nowrap; }
+  .hc-peer .hc-tag { display: inline-block; font-family: var(--font-mono); font-size: 12px; color: #fff; padding: 3px 7px; border-radius: 4px 8px 8px 8px; margin: 14px 0 0 -2px; white-space: nowrap; }
   .hc-agent .hc-tag { background: var(--accent); }
 
   /* custom "you" cursor — fixed, drawn above everything (incl. the floating nav) */
@@ -416,18 +414,44 @@ const frames = projects.map((p, i) => ({
   .hc-scroll svg { animation: hc-bounce 1.8s ease-in-out infinite; }
   @keyframes hc-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
 
-  /* static fallback (mobile / reduced-motion): hide the interactive layer, show a scroll cue */
-  .hero-canvas.hc-static { min-height: auto; padding-block: clamp(64px, 16vh, 140px) 40px; }
+  /* Mobile hero — two modes:
+       .hc-static = reduced-motion (no animation at all)
+       .hc-lite   = mobile with motion (typing + subcopy fade + agent cursor)
+     Both fill the viewport, get real padding, and hide the pointer-only canvas layer.
+     .hc-lite keeps the agent cursor visible. */
+  .hero-canvas.hc-static,
+  .hero-canvas.hc-lite {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(88px, 14vh, 128px) clamp(20px, 6vw, 40px) 40px;
+  }
   .hero-canvas.hc-static .hc-stage,
+  .hero-canvas.hc-lite .hc-stage,
   .hero-canvas.hc-static .hc-status,
-  .hero-canvas.hc-static .hc-hint,
+  .hero-canvas.hc-lite .hc-status,
   .hero-canvas.hc-static .hc-prompt,
-  .hero-canvas.hc-static .hc-agent,
-  .hero-canvas.hc-static .hc-you,
+  .hero-canvas.hc-lite .hc-prompt,
   .hero-canvas.hc-static .hc-zoom,
-  .hero-canvas.hc-static .hc-nudge { display: none; }
-  .hero-canvas.hc-static .hc-headline { position: static; max-width: 20ch; }
-  .hero-canvas.hc-static .hc-scrollcue { display: inline-block; position: static; margin: 28px 0 0 clamp(20px, 4vw, 56px); }
+  .hero-canvas.hc-lite .hc-zoom,
+  .hero-canvas.hc-static .hc-scroll,
+  .hero-canvas.hc-lite .hc-scroll,
+  .hero-canvas.hc-static .hc-nudge,
+  .hero-canvas.hc-lite .hc-nudge,
+  .hero-canvas.hc-static .hc-you,
+  .hero-canvas.hc-lite .hc-you,
+  .hero-canvas.hc-static .hc-agent { display: none; }
+  .hero-canvas.hc-static .hc-headline,
+  .hero-canvas.hc-lite .hc-headline { position: static; max-width: 20ch; }
+  .hero-canvas.hc-static .hc-scrollcue,
+  .hero-canvas.hc-lite .hc-scrollcue {
+    display: inline-flex;
+    position: absolute;
+    left: clamp(20px, 6vw, 40px);
+    bottom: 36px;
+    transform: none;
+  }
 
   @media (max-width: 720px) { .hc-frame { width: 210px; } }
   @media (prefers-reduced-motion: reduce) { .hc-caret { animation: none; } .hc-pulse { animation: none; } }
@@ -452,13 +476,55 @@ const frames = projects.map((p, i) => ({
 
     var RM = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     var finePointer = window.matchMedia("(pointer: fine)").matches;
-    var animated = finePointer && !RM;
     var NAME = nameEl.getAttribute("data-name") || nameEl.textContent;
 
-    // ---- static fallback: no canvas heroics; rely on the linear list below ----
-    if (!animated) {
+    // ---- reduced motion: fully static hero, no animation ----
+    if (RM) {
       hero.classList.add("hc-static");
       return;
+    }
+    // ---- mobile (coarse pointer): a "lite" hero — the agent writes the greeting, the
+    //      subcopy fades in, and a tap makes the agent loop. No draggable canvas. ----
+    if (!finePointer) {
+      runLiteMobile();
+      return;
+    }
+
+    function runLiteMobile() {
+      hero.classList.add("hc-lite");
+      var lag = { x: 24, y: 44, vx: 0, vy: 0, tx: 24, ty: 44, ack: false, ackStart: 0, ackCx: 0, ackCy: 0 };
+      var last = 0;
+      function loop(now) {
+        var dt = last ? Math.min(0.032, (now - last) / 1000) : 0.016; last = now;
+        if (lag.ack) {
+          var p = (now - lag.ackStart) / 650;
+          if (p >= 1) lag.ack = false;
+          else { var a = p * Math.PI * 4; lag.x = lag.ackCx + 13 * Math.sin(a); lag.y = lag.ackCy + 13 * (1 - Math.cos(a)); }
+        } else {
+          spring(lag, "x", "vx", lag.tx, 70, 15, dt);
+          spring(lag, "y", "vy", lag.ty, 70, 15, dt);
+        }
+        agentEl.style.transform = "translate3d(" + lag.x + "px," + lag.y + "px,0)";
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+      // agent tracks the caret as the greeting types (so it "writes" it)
+      function toCaret() {
+        var hr = hero.getBoundingClientRect(), cr = caret.getBoundingClientRect();
+        lag.tx = cr.left - hr.left - 6; lag.ty = cr.top - hr.top - 4;
+      }
+      nameEl.textContent = ""; nameEl.appendChild(caret); caret.style.display = "inline-block";
+      var idx = 0;
+      (function step() {
+        nameEl.textContent = NAME.slice(0, idx); nameEl.appendChild(caret);
+        toCaret();
+        if (idx <= NAME.length) { idx++; setTimeout(step, NAME[idx - 2] === " " ? 130 : (60 + Math.random() * 60)); }
+        else { caret.style.display = "none"; if (subEl) subEl.classList.remove("hc-hidden"); }
+      })();
+      // tap anywhere -> the agent does its acknowledge loop
+      hero.addEventListener("pointerdown", function () {
+        if (!lag.ack) { lag.ackCx = lag.x; lag.ackCy = lag.y; lag.ackStart = performance.now(); lag.ack = true; }
+      });
     }
 
     // Move the custom cursor to <body> so it escapes the hero's stacking context
