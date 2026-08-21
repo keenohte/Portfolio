@@ -14,7 +14,7 @@ export const link = (path = "") => {
 export const site = {
   name: "Lucas Clutter",
   // The canvas hero types this out. Keep it short and human.
-  heroGreeting: "Hey, it's Lucas",
+  heroGreeting: "Hey, I'm Lucas",
   // Short positioning line — the one sentence that says what you do.
   tagline: "Product designer crafting clear, human software.",
   // Longer intro used on the home hero + about page.

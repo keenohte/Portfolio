@@ -67,7 +67,7 @@ const frames = projects.map((p, i) => ({
           tabindex="-1"
           aria-label={`Open case study: ${f.title}`}
         >
-          <span class="hc-label">Frame {f.i + 1}{f.ai ? " · AI" : ""}</span>
+          <span class="hc-label">{f.title}</span>
           <span class="hc-media" data-thumb={f.thumb}>
             {
               f.video ? (
@@ -76,13 +76,16 @@ const frames = projects.map((p, i) => ({
                 </video>
               ) : f.cover ? (
                 <img src={f.cover} alt="" />
-              ) : null
+              ) : (
+                <span class="hc-fpo" aria-hidden="true">
+                  <span class="fpo-blob fpo-blob-a"></span>
+                  <span class="fpo-blob fpo-blob-b"></span>
+                  <span class="fpo-bar fpo-bar-1"></span>
+                  <span class="fpo-bar fpo-bar-2"></span>
+                  <span class="fpo-bar fpo-bar-3"></span>
+                </span>
+              )
             }
-          </span>
-          <span class="hc-open" aria-hidden="true">Open ↗</span>
-          <span class="hc-foot">
-            <span class="hc-name">{f.title}</span>
-            <span class="hc-role">{f.role}</span>
           </span>
         </a>
       ))
@@ -135,9 +138,6 @@ const frames = projects.map((p, i) => ({
     <span class="hc-tag">you</span>
   </div>
 
-  <div class="hc-nudge" id="hcNudge" role="button" tabindex="-1" aria-hidden="true">
-    Want me to pull up the <b>AI &amp; ML work</b>?<span class="hc-go">click me ✦</span>
-  </div>
 </section>
 
 <style>
@@ -254,83 +254,73 @@ const frames = projects.map((p, i) => ({
     color: #fff;
     text-decoration: none;
     display: block;
-    overflow: hidden;
-    transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.28s ease, border-color 0.2s ease;
-    will-change: transform;
+    overflow: visible; /* let the frame label sit above the card like a Figma layer name */
+    /* JS drives transform/opacity every frame during the intro; only the hover
+       cues (outline ring + label color) transition. */
+    transition: box-shadow 0.22s ease, border-color 0.2s ease;
+    will-change: transform, opacity;
   }
-  .hc-frame:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 48px -18px rgba(0, 0, 0, 0.45), var(--shadow);
-    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-    z-index: 8;
-  }
-  .hc-frame:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-  .hc-frame.dimmed { opacity: 0.32; filter: saturate(0.5); }
-  .hc-label {
-    position: absolute; top: -22px; left: 2px;
-    font-family: var(--font-mono); font-size: 11px; color: var(--faint); white-space: nowrap;
-  }
-  .hc-frame.hot .hc-label { color: var(--accent); }
-
-  /* the full-bleed media layer */
+  /* the media is what gets clipped to the rounded card, not the frame */
   .hc-media {
     position: absolute; inset: 0; z-index: 0;
     display: block; overflow: hidden;
+    border-radius: var(--radius-lg);
+    transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
+  /* selection-style outline on hover (reads on light + dark; respects the radius) */
+  .hc-frame:hover {
+    box-shadow: 0 0 0 2px var(--accent), 0 18px 42px -20px rgba(0, 0, 0, 0.5);
+    border-color: transparent;
+    z-index: 9;
+  }
+  .hc-frame:hover .hc-media { transform: scale(1.03); }
+  .hc-frame:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .hc-frame.dimmed { opacity: 0.32; filter: saturate(0.5); }
+  .hc-label {
+    position: absolute; top: -22px; left: 4px; z-index: 3;
+    font-family: var(--font-mono); font-size: 11.5px; font-weight: 500;
+    color: var(--text-muted); white-space: nowrap;
+    transition: color 0.2s ease;
+  }
+  .hc-frame.hot .hc-label { color: var(--accent); }
+  .hc-frame:hover .hc-label { color: var(--accent); }
+
   .hc-media img, .hc-media .hc-vid {
     width: 100%; height: 100%;
     object-fit: cover; display: block;
-    transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
-  .hc-frame:hover .hc-media img, .hc-frame:hover .hc-media .hc-vid { transform: scale(1.05); }
   /* gradient placeholder until a real cover/video is supplied */
   .hc-media[data-thumb="ai"] { background: linear-gradient(135deg, #2a2f66, #3a2f7a 55%, #202544); }
   .hc-media[data-thumb="sys"] { background: linear-gradient(135deg, #163a3a, #1e4f4a); }
   .hc-media[data-thumb="ux"] { background: linear-gradient(135deg, #3a2a44, #522f52); }
   .hc-media[data-thumb="craft"] { background: linear-gradient(120deg, #ff9f45, #ff6b6b 45%, #6c7cff); }
   .hc-media::after {
-    content: ""; position: absolute; inset: 0; z-index: 1;
+    content: ""; position: absolute; inset: 0; z-index: 2;
     background-image: radial-gradient(rgba(255,255,255,0.12) 1px, transparent 1px);
-    background-size: 18px 18px; opacity: 0.45; pointer-events: none;
-  }
-  /* readability scrim under the footer text */
-  .hc-frame::after {
-    content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-    background: linear-gradient(to top, rgba(8, 9, 14, 0.72) 0%, rgba(8, 9, 14, 0.28) 26%, transparent 52%);
+    background-size: 18px 18px; opacity: 0.4; pointer-events: none;
   }
 
-  .hc-open {
-    position: absolute; top: 12px; right: 12px; z-index: 3;
-    font-size: 11.5px; font-weight: 500; color: #fff;
-    background: rgba(14, 16, 22, 0.55);
-    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    padding: 5px 10px; border-radius: 999px;
-    opacity: 0; transform: translateY(-4px);
-    transition: opacity 0.2s ease, transform 0.2s ease;
+  /* FPO "project content": slow-drifting abstract shapes so a card feels alive
+     before a real cover/video is dropped in. */
+  .hc-fpo { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
+  .fpo-blob { position: absolute; border-radius: 50%; filter: blur(26px); }
+  .fpo-blob-a {
+    width: 66%; aspect-ratio: 1; left: -12%; top: -18%;
+    background: radial-gradient(circle, rgba(255,255,255,0.55), transparent 70%);
+    animation: fpoDriftA 19s ease-in-out infinite;
   }
-  .hc-frame:hover .hc-open, .hc-frame:focus-visible .hc-open { opacity: 1; transform: none; }
-
-  .hc-foot {
-    position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
-    display: flex; flex-direction: column; gap: 2px;
-    padding: 16px 18px;
+  .fpo-blob-b {
+    width: 58%; aspect-ratio: 1; right: -14%; bottom: -20%;
+    background: radial-gradient(circle, rgba(255,255,255,0.32), transparent 70%);
+    animation: fpoDriftB 23s ease-in-out infinite;
   }
-  .hc-name {
-    font-family: var(--font-display);
-    font-size: 21px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.1;
-    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
-  }
-  .hc-role {
-    font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.02em;
-    color: rgba(255, 255, 255, 0.85);
-    opacity: 0; max-height: 0; overflow: hidden;
-    transform: translateY(4px);
-    transition: opacity 0.22s ease, max-height 0.22s ease, transform 0.22s ease;
-  }
-  .hc-frame:hover .hc-role, .hc-frame:focus-visible .hc-role {
-    opacity: 1; max-height: 2.4em; transform: none;
-  }
+  .fpo-bar { position: absolute; left: 15%; height: 7.5%; border-radius: 999px; background: rgba(255,255,255,0.22); }
+  .fpo-bar-1 { width: 54%; top: 31%; animation: fpoBar 15s ease-in-out infinite; }
+  .fpo-bar-2 { width: 38%; top: 47%; background: rgba(255,255,255,0.16); animation: fpoBar 17s ease-in-out infinite reverse; }
+  .fpo-bar-3 { width: 46%; top: 63%; background: rgba(255,255,255,0.13); animation: fpoBar 21s ease-in-out infinite; }
+  @keyframes fpoDriftA { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(16%, 12%); } }
+  @keyframes fpoDriftB { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-13%, -9%); } }
+  @keyframes fpoBar { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(9%); } }
 
   .hc-status {
     position: absolute; left: 16px; bottom: 18px; z-index: 6;
@@ -358,9 +348,12 @@ const frames = projects.map((p, i) => ({
   .hc-hint.show { opacity: 1; max-height: 2.2em; margin-bottom: 8px; }
 
   .hc-prompt {
-    position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(14px); z-index: 8;
+    position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%) translateY(14px); z-index: 8;
     width: min(560px, calc(100% - 32px));
-    background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px; box-shadow: var(--shadow);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 8px;
+    /* soft, contained shadow — the hero clips overflow, so a big drop shadow would
+       get sliced off at the work-section seam and read as a hard line */
+    box-shadow: 0 6px 24px -12px rgba(0, 0, 0, 0.3);
     opacity: 0; transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.2,1,0.3,1);
   }
   .hc-prompt.show { opacity: 1; transform: translateX(-50%); }
@@ -415,15 +408,6 @@ const frames = projects.map((p, i) => ({
   .hc-you[data-state="point"] .g-hand { display: block; }
   .hc-you[data-state="text"] .g-text { display: block; }
 
-  .hc-nudge {
-    position: absolute; right: 20px; bottom: 132px; z-index: 32; max-width: 230px;
-    background: var(--accent); color: #fff; font-size: 13px; line-height: 1.35; padding: 11px 13px;
-    border-radius: 12px 12px 2px 12px; box-shadow: 0 14px 30px -10px rgba(108,124,255,0.7); cursor: pointer;
-    opacity: 0; transform: translateY(8px) scale(0.96); transform-origin: bottom right; pointer-events: none;
-    transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.2,1.3,0.4,1);
-  }
-  .hc-nudge.show { opacity: 1; transform: none; pointer-events: auto; }
-  .hc-nudge .hc-go { display: block; margin-top: 4px; font-family: var(--font-mono); font-size: 11px; opacity: 0.85; }
 
   .hc-scrollcue {
     position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 9;
@@ -476,8 +460,6 @@ const frames = projects.map((p, i) => ({
   .hero-canvas.hc-lite .hc-zoom,
   .hero-canvas.hc-static .hc-scroll,
   .hero-canvas.hc-lite .hc-scroll,
-  .hero-canvas.hc-static .hc-nudge,
-  .hero-canvas.hc-lite .hc-nudge,
   .hero-canvas.hc-static .hc-you,
   .hero-canvas.hc-lite .hc-you,
   .hero-canvas.hc-static .hc-agent { display: none; }
@@ -519,8 +501,6 @@ const frames = projects.map((p, i) => ({
     scroll-snap-align: center;
     opacity: 0; transform: translateY(16px);
   }
-  /* no hover on touch — reveal the role by default so the card isn't just a name */
-  .hero-canvas.hc-lite .hc-role { opacity: 1; max-height: 2.4em; transform: none; }
   .hero-canvas.hc-lite.hc-cards-in .hc-frame { animation: hcCardIn 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
   @keyframes hcCardIn { to { opacity: 1; transform: none; } }
   .hero-canvas.hc-lite.hc-cards-in .hc-frame:nth-child(1) { animation-delay: 0s; }
@@ -549,7 +529,6 @@ const frames = projects.map((p, i) => ({
     var promptEl = document.getElementById("hcPrompt");
     var agentEl = document.getElementById("hcAgent");
     var youEl = document.getElementById("hcYou");
-    var nudgeEl = document.getElementById("hcNudge");
 
     var RM = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     var finePointer = window.matchMedia("(pointer: fine)").matches;
@@ -629,6 +608,7 @@ const frames = projects.map((p, i) => ({
         ai: el.getAttribute("data-ai") === "1",
         href: el.getAttribute("href"),
         x: 0, y: 0, vx: 0, vy: 0, rot: 0, vrot: 0, sc: 0, vsc: 0,
+        op: 0, opTarget: 0,
         tx: 0, ty: 0, trot: 0, jr: ((i * 37) % 9) - 4, w: 250, h: 240,
         mode: "hidden",
       };
@@ -721,7 +701,6 @@ const frames = projects.map((p, i) => ({
     function frame(now) {
       var dt = last ? Math.min(0.032, (now - last) / 1000) : 0.016;
       last = now;
-      var t = now / 1000;
       if (ag.active) {
         if (ag.ack) {
           // acknowledge: quickly trace a small circle twice, then resume
@@ -741,7 +720,6 @@ const frames = projects.map((p, i) => ({
       for (var i = 0; i < cards.length; i++) {
         var c = cards[i];
         if (c.mode === "hidden") continue;
-        var bob = 0;
         if (c.mode === "drag") {
           spring(c, "sc", "vsc", 1.05, 220, 22, dt);
           spring(c, "rot", "vrot", Math.max(-9, Math.min(9, c.vx * 0.02)), 120, 18, dt);
@@ -760,10 +738,13 @@ const frames = projects.map((p, i) => ({
           spring(c, "x", "vx", c.tx, 130, 20, dt);
           spring(c, "y", "vy", c.ty, 130, 20, dt);
           spring(c, "rot", "vrot", c.trot, 110, 18, dt);
-          spring(c, "sc", "vsc", 1, 170, 20, dt);
-          if (done) bob = Math.sin(t * 0.9 + i * 1.3) * 2.2;
+          // critically damped so the card grows to 1 and holds — no overshoot-then-shrink
+          spring(c, "sc", "vsc", 1, 190, 28, dt);
         }
-        c.el.style.transform = "translate3d(" + c.x + "px," + (c.y + bob) + "px,0) rotate(" + c.rot + "deg) scale(" + c.sc + ")";
+        // quick fade toward the card's opacity target (0 while hidden, 1 once dealt in)
+        c.op += (c.opTarget - c.op) * Math.min(1, dt * 12);
+        c.el.style.opacity = c.op;
+        c.el.style.transform = "translate3d(" + c.x + "px," + c.y + "px,0) rotate(" + c.rot + "deg) scale(" + c.sc + ")";
       }
       // subtle bg parallax follows agent a touch
       requestAnimationFrame(frame);
@@ -777,7 +758,6 @@ const frames = projects.map((p, i) => ({
     cards.forEach(function (c) {
       c.el.addEventListener("pointerdown", function (e) {
         if (!done) { e.preventDefault(); return; }
-        if (e.target.closest(".hc-open")) return; // let the link navigate
         e.preventDefault();
         noteInteract();
         c.el.setPointerCapture(e.pointerId);
@@ -821,14 +801,10 @@ const frames = projects.map((p, i) => ({
       c.el.addEventListener("click", function (e) { if (c.suppress) e.preventDefault(); });
     });
 
-    // ---- interaction tracking / hint / nudge ----
-    var lastInteract = performance.now(), hintFaded = false, nudgeShown = false;
+    // ---- interaction tracking / hint ----
+    var lastInteract = performance.now(), hintFaded = false;
     function firstInteraction() { if (hintFaded) return; hintFaded = true; hintEl.classList.remove("show"); }
-    function hideNudge() { nudgeEl.classList.remove("show"); nudgeShown = false; }
-    function noteInteract() { lastInteract = performance.now(); hideNudge(); firstInteraction(); }
-    function showNudge() { if (nudgeShown || !done) return; nudgeShown = true; agentTo(W - 150, H - 200); nudgeEl.classList.add("show"); }
-    nudgeEl.addEventListener("click", function () { hideNudge(); cmdFilter("ai"); });
-    nudgeEl.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); hideNudge(); cmdFilter("ai"); } });
+    function noteInteract() { lastInteract = performance.now(); firstInteraction(); }
     hero.addEventListener("pointerdown", noteInteract, true);
 
     // ---- agent idle life ----
@@ -849,7 +825,6 @@ const frames = projects.map((p, i) => ({
       var idle = performance.now() - lastInteract;
       if (idle < 4500) return;
       idleBehavior();
-      if (idle > 12000) showNudge();
     }, 2800);
 
     function celebrate(x, y) {
@@ -917,7 +892,7 @@ const frames = projects.map((p, i) => ({
       if (t && t.closest) {
         if (t.closest("input, textarea")) st = "text";
         else if (t.closest(".hc-frame")) st = "grab";
-        else if (t.closest("a,button,.hc-chip,.hc-nudge,.fn-link,.fn-home")) st = "point";
+        else if (t.closest("a,button,.hc-chip,.fn-link,.fn-home")) st = "point";
       }
       youEl.setAttribute("data-state", st);
     });
@@ -967,28 +942,45 @@ const frames = projects.map((p, i) => ({
     document.getElementById("hcZoomFit").addEventListener("click", resetCamera);
 
     // ---- cold-open ----
-    function typeName(cb) {
+    // point the agent at the typing caret so it looks like it's writing the greeting
+    function toCaret() {
+      var hr = hero.getBoundingClientRect(), cr = caret.getBoundingClientRect();
+      agentTo(cr.left - hr.left - 6, cr.top - hr.top - 4);
+    }
+    function typeName(onStep, onDone) {
       nameEl.textContent = ""; nameEl.appendChild(caret); caret.style.display = "inline-block";
       var idx = 0;
       (function step() {
         nameEl.textContent = NAME.slice(0, idx); nameEl.appendChild(caret);
+        if (onStep) onStep();
         if (idx <= NAME.length) { idx++; T(step, NAME[idx - 2] === " " ? 120 : (50 + Math.random() * 55)); }
-        else { caret.style.display = "none"; if (cb) cb(); }
+        else { caret.style.display = "none"; if (onDone) onDone(); }
       })();
     }
-    function spawn(c) { c.x = ag.x - 20; c.y = ag.y - 10; c.sc = 0.2; c.rot = c.jr; c.mode = "spring"; }
+    // Deal a card in *at its resting spot* — it fades in and grows in place while the
+    // agent hovers over it (no flying in from the edge of the screen).
+    function spawn(c) { c.x = c.tx; c.y = c.ty; c.rot = c.trot; c.sc = 0.82; c.op = 0; c.opTarget = 1; c.el.style.opacity = "0"; c.mode = "spring"; }
 
     function runIntro() {
       hero.querySelector(".hc-kicker").style.opacity = "1";
       setStatus("reading <b>Lucas</b>'s work…");
-      agentTo(W * 0.22, H * 0.4);
-      // start typing right away; fade the subcopy in once the greeting is done
-      T(function () { typeName(function () { if (subEl) subEl.classList.remove("hc-hidden"); }); }, 150);
-      T(function () { setStatus("found <b>" + cards.length + "</b> projects · prioritizing <b>AI</b>"); }, 1500);
+      // the agent "writes" the greeting: track the caret while it types, then fade the
+      // subcopy in a beat later
+      typeName(
+        function () { toCaret(); },
+        function () { T(function () { if (subEl) subEl.classList.remove("hc-hidden"); }, 500); }
+      );
+      T(function () { setStatus("found <b>" + cards.length + "</b> projects · prioritizing <b>AI</b>"); }, 1900);
       var vis = cards.filter(function (c) { return !c.off; });
-      var base = 2100, stagger = 260;
+      // a little slower + more staggered so each card gets a moment as it appears
+      var base = 2500, stagger = 460;
       vis.forEach(function (c, n) {
-        T(function () { agentTo(c.tx + c.w / 2, c.ty + 20); setStatus(c.ai ? "placing <b>" + c.el.querySelector('.hc-name').textContent + "</b> · AI" : "placing " + c.el.querySelector('.hc-name').textContent); T(function () { spawn(c); }, 120); }, base + n * stagger);
+        T(function () {
+          agentTo(c.tx + c.w / 2, c.ty + c.h / 2);
+          var nm = c.el.querySelector('.hc-label').textContent;
+          setStatus(c.ai ? "placing <b>" + nm + "</b> · AI" : "placing " + nm);
+          T(function () { spawn(c); }, 200);
+        }, base + n * stagger);
       });
       var end = base + vis.length * stagger + 300;
       T(function () { setStatus("tidying layout…"); agentTo(W * 0.5, H * 0.5); }, end);
@@ -996,7 +988,6 @@ const frames = projects.map((p, i) => ({
     }
     function finishIntro() {
       done = true;
-      layout();
       setStatus("ready ✦");
       agentTo(W - 150, H - 150);
       promptEl.classList.add("show");
@@ -1009,7 +1000,7 @@ const frames = projects.map((p, i) => ({
 
     window.addEventListener("resize", function () { layout(); if (done) cards.forEach(function (c) { if (c.mode === "free") c.mode = "spring"; }); });
 
-    cards.forEach(function (c) { c.el.style.transform = "translate3d(-9999px,0,0)"; });
+    cards.forEach(function (c) { c.el.style.transform = "translate3d(-9999px,0,0)"; c.el.style.opacity = "0"; });
     T(runIntro, 350);
   })();
 </script>
