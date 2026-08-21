@@ -428,7 +428,6 @@ const frames = projects.map((p, i) => ({
     padding: clamp(84px, 12vh, 112px) clamp(20px, 6vw, 40px) 40px;
   }
   .hero-canvas.hc-static .hc-stage,
-  .hero-canvas.hc-lite .hc-stage,
   .hero-canvas.hc-static .hc-status,
   .hero-canvas.hc-lite .hc-status,
   .hero-canvas.hc-static .hc-prompt,
@@ -455,6 +454,39 @@ const frames = projects.map((p, i) => ({
     bottom: 36px;
     transform: none;
   }
+
+  /* Mobile lite: the canvas frames become a horizontal swipe carousel (no drag/pan/zoom) */
+  .hero-canvas.hc-lite .hc-stage {
+    position: relative;
+    inset: auto;
+    z-index: 1;
+    margin: 28px calc(-1 * clamp(20px, 6vw, 40px)) 0;
+    padding-inline: clamp(20px, 6vw, 40px);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .hero-canvas.hc-lite .hc-stage::-webkit-scrollbar { display: none; }
+  .hero-canvas.hc-lite .hc-world { position: static; transform: none !important; }
+  .hero-canvas.hc-lite .hc-zoomer {
+    position: static; width: auto; height: auto; zoom: 1 !important;
+    display: flex; gap: 16px; padding: 28px 0 12px;
+  }
+  .hero-canvas.hc-lite .hc-frame {
+    position: relative; top: auto; left: auto;
+    width: auto; flex: 0 0 78%; max-width: 300px;
+    scroll-snap-align: center;
+    opacity: 0; transform: translateY(16px);
+  }
+  .hero-canvas.hc-lite.hc-cards-in .hc-frame { animation: hcCardIn 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
+  @keyframes hcCardIn { to { opacity: 1; transform: none; } }
+  .hero-canvas.hc-lite.hc-cards-in .hc-frame:nth-child(1) { animation-delay: 0s; }
+  .hero-canvas.hc-lite.hc-cards-in .hc-frame:nth-child(2) { animation-delay: 0.07s; }
+  .hero-canvas.hc-lite.hc-cards-in .hc-frame:nth-child(3) { animation-delay: 0.14s; }
+  .hero-canvas.hc-lite.hc-cards-in .hc-frame:nth-child(4) { animation-delay: 0.21s; }
+  .hero-canvas.hc-lite.hc-cards-in .hc-frame:nth-child(5) { animation-delay: 0.28s; }
+  .hero-canvas.hc-lite.hc-cards-in .hc-frame:nth-child(6) { animation-delay: 0.35s; }
 
   @media (max-width: 720px) { .hc-frame { width: 210px; } }
   @media (prefers-reduced-motion: reduce) { .hc-caret { animation: none; } .hc-pulse { animation: none; } }
@@ -525,18 +557,22 @@ const frames = projects.map((p, i) => ({
         else {
           caret.style.display = "none";
           if (subEl) subEl.classList.remove("hc-hidden");
+          hero.classList.add("hc-cards-in"); // deal in the swipe carousel
           // once the greeting is written, the agent roams around like on desktop
           setInterval(function () {
             if (lag.ack) return;
             var hr = hero.getBoundingClientRect();
             lag.tx = 32 + Math.random() * Math.max(60, hr.width - 110);
-            lag.ty = 90 + Math.random() * Math.max(60, hr.height - 340);
+            lag.ty = 90 + Math.random() * Math.max(60, hr.height - 360);
           }, 3000);
         }
       })();
-      // tap anywhere -> the agent does its acknowledge loop
+      // tap -> the agent does its acknowledge loop (cooldown so swiping the carousel doesn't spam it)
       hero.addEventListener("pointerdown", function () {
-        if (!lag.ack) { lag.ackCx = lag.x; lag.ackCy = lag.y; lag.ackStart = performance.now(); lag.ack = true; }
+        if (!lag.ack && performance.now() > (lag.ackCoolUntil || 0)) {
+          lag.ackCx = lag.x; lag.ackCy = lag.y; lag.ackStart = performance.now();
+          lag.ack = true; lag.ackCoolUntil = performance.now() + 2000;
+        }
       });
     }
 
