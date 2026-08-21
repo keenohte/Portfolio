@@ -45,7 +45,7 @@
   --border: var(--line);
 
   --accent: #4f46e5;   /* indigo — agent / brand */
-  --accent-2: #6d5cf0;
+  --accent-2: #6366f1; /* keep the ramp in indigo, never drifting into AI-slop violet */
   --human: #d9691a;    /* warm orange — the "you" accent */
   --good: #1f9366;
   --accent-contrast: #ffffff; /* text/icon on top of the accent */
@@ -66,7 +66,7 @@
   --faint: #79839a;
 
   --accent: #6c7cff;
-  --accent-2: #8b78ff;
+  --accent-2: #818cf8; /* indigo, not violet */
   --human: #ff9f45;
   --good: #4bd6a0;
   --accent-contrast: #0e1016;
@@ -157,16 +157,19 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
   color: var(--text-muted);
 }
 
-/* gradient placeholder when a case study has no cover image yet */
+/* placeholder when a case study has no cover image yet — a quiet tinted panel,
+   not a saturated AI gradient */
 .cover-placeholder {
   aspect-ratio: 16 / 10;
   border-radius: var(--radius);
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 55%, #b26bff 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--surface-2)), var(--surface-2));
+  border: 1px solid var(--line);
   display: grid;
   place-items: center;
-  color: #fff;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  letter-spacing: 0.02em;
   padding: var(--space-m);
   text-align: center;
 }

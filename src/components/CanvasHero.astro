@@ -32,7 +32,6 @@ const frames = projects.map((p, i) => ({
   <div class="hc-bg" aria-hidden="true"></div>
 
   <div class="hc-headline">
-    <p class="eyebrow hc-kicker">canvas agent · live</p>
     <h1 id="hcName" data-name={site.heroGreeting}>{site.heroGreeting}<span class="hc-caret" aria-hidden="true"></span></h1>
     <p class="hc-subcopy" id="hcSub">{site.tagline}</p>
   </div>
@@ -177,11 +176,6 @@ const frames = projects.map((p, i) => ({
     max-width: min(560px, 62vw);
     z-index: 2;
     pointer-events: none;
-  }
-  .hc-kicker { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 14px; }
-  .hc-kicker::before {
-    content: ""; width: 7px; height: 7px; border-radius: 50%;
-    background: var(--accent); box-shadow: 0 0 0 4px rgba(108, 124, 255, 0.18);
   }
   .hc-headline h1 {
     font-family: var(--font-display);
@@ -334,24 +328,24 @@ const frames = projects.map((p, i) => ({
     font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
     background: var(--surface); border: 1px solid var(--line); padding: 8px 12px; border-radius: 9px; max-width: 70vw;
   }
-  .hc-pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; animation: hc-pulse 1.4s ease-in-out infinite; }
-  @keyframes hc-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(108,124,255,0.5); } 50% { box-shadow: 0 0 0 6px rgba(108,124,255,0); } }
+  .hc-pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; }
   .hc-status b { color: var(--text); font-weight: 500; }
 
-  /* caption inside the prompt (never overlaps the cards); collapses after first interaction */
+  /* caption floated just above the prompt (out of flow, so showing/hiding it
+     animates only opacity + transform — never layout) */
   .hc-hint {
-    margin: 0 0 4px;
-    padding: 2px 8px 0;
+    position: absolute;
+    left: 10px; right: 10px; bottom: calc(100% + 8px);
     font-family: var(--font-mono);
     font-size: 11px;
     color: var(--faint);
     letter-spacing: 0.03em;
     opacity: 0;
-    max-height: 0;
-    overflow: hidden;
-    transition: opacity 0.4s ease, max-height 0.4s ease, margin 0.4s ease;
+    transform: translateY(6px);
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
   }
-  .hc-hint.show { opacity: 1; max-height: 2.2em; margin-bottom: 8px; }
+  .hc-hint.show { opacity: 1; transform: none; }
 
   .hc-prompt {
     position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%) translateY(14px); z-index: 8;
@@ -976,7 +970,6 @@ const frames = projects.map((p, i) => ({
     function spawn(c) { c.x = c.tx; c.y = c.ty; c.rot = c.trot; c.sc = 0.82; c.op = 0; c.opTarget = 1; c.el.style.opacity = "0"; c.mode = "spring"; }
 
     function runIntro() {
-      hero.querySelector(".hc-kicker").style.opacity = "1";
       setStatus("reading <b>Lucas</b>'s work…");
       // the agent "writes" the greeting: track the caret while it types, then fade the
       // subcopy in a beat later
