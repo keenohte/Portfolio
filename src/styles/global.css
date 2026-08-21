@@ -31,8 +31,30 @@
   --maxw: 1120px;
   --maxw-prose: 68ch;
 
-  /* Palette — committed dark (mirrors the approved prototype) */
-  --ink: #0e1016;
+  /* Palette — LIGHT is the default; dark is opt-in via [data-theme="dark"]. */
+  --bg: #f7f5ef;      /* warm paper */
+  --ink: var(--bg);   /* canvas ground alias (used for halos/glow grounds) */
+  --surface: #ffffff;
+  --surface-2: #efece3;
+  --line: #e4ded1;
+  --line-soft: #ede9df;
+  --dot: #dbd5c7;
+  --text: #17150f;
+  --text-muted: #665f51;
+  --faint: #726b59; /* AA on cream (4.86:1) */
+  --border: var(--line);
+
+  --accent: #4f46e5;   /* indigo — agent / brand */
+  --accent-2: #6d5cf0;
+  --human: #d9691a;    /* warm orange — the "you" accent */
+  --good: #1f9366;
+  --accent-contrast: #ffffff; /* text/icon on top of the accent */
+  --hairline: color-mix(in srgb, var(--text) 12%, transparent); /* frosted-glass borders */
+
+  --shadow: 0 1px 2px rgba(20, 18, 12, 0.05), 0 20px 44px -16px rgba(20, 18, 12, 0.16);
+}
+
+:root[data-theme="dark"] {
   --bg: #0e1016;
   --surface: #161922;
   --surface-2: #1d212c;
@@ -41,14 +63,14 @@
   --dot: #232a38;
   --text: #eef0f5;
   --text-muted: #8b93a6;
-  --faint: #79839a; /* lightened for AA contrast (5:1 on bg) */
-  --border: var(--line);
+  --faint: #79839a;
 
-  --accent: #6c7cff;      /* agent / brand */
+  --accent: #6c7cff;
   --accent-2: #8b78ff;
-  --human: #ff9f45;       /* the "you" accent */
+  --human: #ff9f45;
   --good: #4bd6a0;
   --accent-contrast: #0e1016;
+  --hairline: rgba(255, 255, 255, 0.1);
 
   --shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 18px 40px -12px rgba(0, 0, 0, 0.7);
 }
@@ -120,7 +142,7 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
 .btn:hover { transform: translateY(-1px); border-color: var(--accent); }
 .btn--primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-contrast);
   border-color: var(--accent);
 }
 .btn--primary:hover { background: var(--accent-2); border-color: var(--accent-2); }

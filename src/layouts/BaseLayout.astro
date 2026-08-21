@@ -49,6 +49,17 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Apply saved theme before paint (default = light) to avoid a flash. -->
+    <script is:inline>
+      (function () {
+        try {
+          if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.setAttribute("data-theme", "dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>

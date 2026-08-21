@@ -27,7 +27,27 @@ const isActive = (href: string) => !href.includes("#") && path.startsWith(href);
       ))
     }
   </div>
+  <button class="fn-toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">
+    <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  </button>
 </nav>
+
+<script>
+  var __tbtn = document.getElementById("themeToggle");
+  if (__tbtn) {
+    __tbtn.addEventListener("click", function () {
+      var isDark = document.documentElement.getAttribute("data-theme") === "dark";
+      if (isDark) {
+        document.documentElement.removeAttribute("data-theme");
+        try { localStorage.setItem("theme", "light"); } catch (e) {}
+      } else {
+        document.documentElement.setAttribute("data-theme", "dark");
+        try { localStorage.setItem("theme", "dark"); } catch (e) {}
+      }
+    });
+  }
+</script>
 
 <style>
   .floatnav {
@@ -52,7 +72,7 @@ const isActive = (href: string) => !href.includes("#") && path.startsWith(href);
     background: color-mix(in srgb, var(--surface) 62%, transparent);
     -webkit-backdrop-filter: blur(14px) saturate(1.4);
     backdrop-filter: blur(14px) saturate(1.4);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--hairline);
     box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.6);
     transition: transform 0.15s ease, border-color 0.2s ease;
   }
@@ -65,6 +85,27 @@ const isActive = (href: string) => !href.includes("#") && path.startsWith(href);
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
   }
 
+  .fn-toggle {
+    flex: none;
+    width: 48px; height: 48px;
+    display: grid; place-items: center;
+    border-radius: 999px;
+    color: var(--text-muted);
+    background: color-mix(in srgb, var(--surface) 62%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+    border: 1px solid var(--hairline);
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+    transition: transform 0.15s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .fn-toggle:hover { transform: translateY(-1px); color: var(--text); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+  .fn-toggle svg { display: block; }
+  /* light (default) shows the moon (tap = go dark); dark shows the sun (tap = go light) */
+  .fn-toggle .icon-sun { display: none; }
+  :global(html[data-theme="dark"]) .fn-toggle .icon-sun { display: block; }
+  :global(html[data-theme="dark"]) .fn-toggle .icon-moon { display: none; }
+
   .fn-pill {
     display: flex;
     align-items: center;
@@ -74,7 +115,7 @@ const isActive = (href: string) => !href.includes("#") && path.startsWith(href);
     background: color-mix(in srgb, var(--surface) 62%, transparent);
     -webkit-backdrop-filter: blur(14px) saturate(1.4);
     backdrop-filter: blur(14px) saturate(1.4);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--hairline);
     box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.6);
   }
   .fn-link {
