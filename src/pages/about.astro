@@ -1,6 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { site } from "../config";
+import { site, link } from "../config";
 
 // Edit these freely — they're the content of the page.
 const bio = [
@@ -35,7 +35,7 @@ const skills = [
       <h1>{site.intro}</h1>
       <div class="about-actions">
         <a class="btn btn--primary" href={site.resumeUrl}>Résumé ↗</a>
-        <a class="btn btn--ghost" href="/contact">Get in touch</a>
+        <a class="btn btn--ghost" href={link("contact")}>Get in touch</a>
       </div>
     </div>
     <figure class="about-portrait">

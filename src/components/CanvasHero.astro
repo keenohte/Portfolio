@@ -1,6 +1,6 @@
 ---
 import { getCollection } from "astro:content";
-import { site } from "../config";
+import { site, link } from "../config";
 
 const projects = (await getCollection("work", ({ data }) => !data.draft)).sort(
   (a, b) => a.data.order - b.data.order,
@@ -60,7 +60,7 @@ const frames = projects.map((p, i) => ({
       frames.map((f) => (
         <a
           class:list={["hc-frame", { hot: f.ai }]}
-          href={`/work/${f.slug}`}
+          href={link(`work/${f.slug}`)}
           data-i={f.i}
           data-ai={f.ai ? "1" : "0"}
           data-thumb={f.thumb}

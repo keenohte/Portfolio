@@ -2,6 +2,15 @@
  * Site-wide settings. Edit these — they flow into the header, footer,
  * home page, about page, and page <title>/meta tags.
  */
+// Base-aware link helper so every internal URL respects astro.config `base`
+// (e.g. "/portfolio/…" on GitHub Pages, or "/…" once a custom domain is attached).
+export const base = import.meta.env.BASE_URL;
+export const link = (path = "") => {
+  const b = base.replace(/\/$/, ""); // normalize: no trailing slash
+  const p = String(path).replace(/^\//, ""); // no leading slash
+  return p ? `${b}/${p}` : `${b}/`;
+};
+
 export const site = {
   name: "Lucas Clutter",
   // The canvas hero types this out. Keep it short and human.
@@ -13,7 +22,7 @@ export const site = {
     "I'm a product designer focused on turning complex problems into simple, usable interfaces. I care about the details, the systems behind them, and the people who use them.",
   email: "you@example.com",
   location: "City, Country",
-  resumeUrl: "/resume.pdf", // drop a resume.pdf in /public to enable
+  resumeUrl: link("resume.pdf"), // drop a resume.pdf in /public to enable
   socials: [
     { label: "LinkedIn", href: "https://linkedin.com/in/your-handle" },
     { label: "Read.cv", href: "https://read.cv/your-handle" },
@@ -22,7 +31,7 @@ export const site = {
 };
 
 export const nav = [
-  { label: "Work", href: "/#work" },
-  { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
+  { label: "Work", href: link("#work") },
+  { label: "About", href: link("about") },
+  { label: "Contact", href: link("contact") },
 ];

@@ -3,6 +3,7 @@ import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import CanvasHero from "../components/CanvasHero.astro";
 import WorkCard from "../components/WorkCard.astro";
+import { link } from "../config";
 
 const projects = (await getCollection("work", ({ data }) => !data.draft)).sort(
   (a, b) => a.data.order - b.data.order,
@@ -41,7 +42,7 @@ const projects = (await getCollection("work", ({ data }) => !data.draft)).sort(
       {
         projects.map((p) => (
           <WorkCard
-            href={`/work/${p.id}`}
+            href={link(`work/${p.id}`)}
             title={p.data.title}
             summary={p.data.summary}
             company={p.data.company}
