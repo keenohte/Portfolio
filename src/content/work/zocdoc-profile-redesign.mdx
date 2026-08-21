@@ -1,0 +1,74 @@
+---
+title: "Rebuilding Zocdoc's provider profile"
+summary: "A profile redesign that lost its first A/B test, and how reading that loss closely reshaped it into a modular, research-backed system."
+company: "Zocdoc"
+role: "Product Design Lead"
+team: "Design lead, with product, research, and engineering"
+timeline: "2024 · in development"
+tags: ["UX", "Research", "Experimentation"]
+ai: false
+problem: "The profile page had turned into a patchwork of isolated A/B wins, optimized hard but no longer coherent for the person trying to choose a doctor."
+metric:
+  value: "5–6 → 2"
+  label: "booking inputs shown upfront"
+featured: true
+order: 0
+draft: false
+---
+
+## Overview
+
+Zocdoc is where patients find a doctor and book a visit. The provider profile is the page where someone decides whether this is the right person to see, and then books. I led the design work to rebuild it.
+
+What started as a single redesign became two rounds. The first attempt lost its A/B test. The second, sharper direction was built directly on what that loss taught us.
+
+## The problem
+
+For years the profile page had been shaped almost entirely by A/B testing. When a test showed a win, the team leaned into it, sometimes past the point where it still made sense. One test found that a more prominent booking module helped, so the module kept growing until it took over most of the page. Optimizing one number at a time works until it doesn't, and by then the page served the metric more than the person reading it.
+
+That left the platform fragmented. Different teams had run their own tests on their own surfaces, and the whole thing had become a kind of Frankenstein: several versions of essentially the same page living inside the core booking flow, stitched together with no shared strategy. Chasing north-star metrics like conversion also meant details like SEO, and the "why" behind how people behaved, kept slipping.
+
+Underneath it was a tension I kept returning to. The page has two audiences at the same time. Researchers want depth to judge whether a provider is a good fit. Bookers already know who they want and just need to schedule. A good profile has to serve both without making either one work harder than they should.
+
+> The blocker was never any single layout. It was treating the page as a pile of A/B tests instead of one experience.
+
+## The first redesign
+
+To break the cycle, we ran a week-long design sprint with product, design, and research. We pulled together the existing research, mapped what each type of user actually needed, and turned the strongest insights into concepts we could test. After a few rounds we landed on a Phase 1 design and put it into an A/B test.
+
+Two changes carried it. The first was an "at-a-glance" section at the top, so someone could size up a provider quickly. The second was a restructured reviews module. Reviews drive most of the decision, so we made them easier to scan, filter, and jump into, including surfacing potential red flags early.
+
+## Why it lost
+
+The test came back a loss, and the reasons were specific.
+
+The at-a-glance section took up too much room, especially on mobile, where it added to the cognitive load and pushed the booking module fully below the fold. Separately, a technical issue made the mobile booking CTA appear late, and that alone accounted for a 0.6% drop in people entering the booking flow.
+
+One change did stand out. We had added a quick link to the provider's practice page, and it drove a 10% increase in people visiting those pages from the profile. That told us the information was valuable. But the way we surfaced it sent people on a detour instead of helping them in place. The profile and practice pages looked and behaved like different products, and moving between them was jarring. If someone jumped from a profile to a practice page with several providers, the right one wasn't even pre-selected.
+
+A loss on the test wasn't a reason to revert. It was a very clear set of instructions about what to fix.
+
+## What we learned
+
+- The at-a-glance idea was right, but it needed far less space.
+- Booking has to stay reachable on mobile without swallowing the page.
+- People clearly want practice information, so the two pages need to feel like one journey rather than a handoff.
+- The page has to be built to change, because we'll keep testing into it.
+
+## The redesign, informed
+
+The second direction is a north-star for the profile, built from those learnings. It's still in progress and we're holding it loosely, but the shape is clear.
+
+The biggest shift is structural. The layout is modular, so pieces can be rearranged, resized, or swapped as testing tells us more. Inside that frame, we trimmed the at-a-glance section down, moved booking higher on mobile, and brought back jumplinks so navigation is faster.
+
+We also rethought the booking module itself. Today it shows five or six inputs at once, which is a lot to face on a page you're still reading. We cut it back to the inputs that actually affect availability at this stage, like location and whether you're a new or existing patient. Everything else, such as visit reason, insurance, and time, moves to a dedicated booking page. Booking stays quick for people ready to act, and the module stops competing with the provider details everyone else came to read.
+
+Beyond the profile, we started closing the gap to the practice page. Recent research there pointed to a need for stronger trust signals, so people feel confident booking through Zocdoc without leaving to verify a provider somewhere else. Early explorations add office photos and a better map so the practice page reads as part of the same journey.
+
+## Where it's going
+
+Phase 1 of the informed redesign is heading into development and starts testing in Q2, phased across desktop, mobile web, and app. The real outcome is less about one metric and more about the standard. The profile is finally being designed as one system with a strategy behind it, instead of one isolated test at a time.
+
+## Reflection
+
+The most useful thing I took from this is that a losing test can be worth more than a winning one, if you actually read it. The first redesign didn't fail because the ideas were wrong. It failed on execution details we could see and fix, and it handed us a much sharper brief for the second round. It also made the two-audience problem concrete. Every decision on this page is a negotiation between someone still deciding and someone ready to book, and the job is to serve both without either of them feeling the compromise.
