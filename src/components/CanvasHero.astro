@@ -133,6 +133,7 @@ const frames = projects.map((p, i) => ({
     <span class="cur-glyph">
       <svg class="g-arrow" width="22" height="22" viewBox="0 0 22 22"><path d="M2 2 L2 16 L6.5 12.2 L9.2 18.5 L11.8 17.3 L9.1 11.2 L15 11 Z" fill="#ff9f45" stroke="#241300" stroke-width="1.1"/></svg>
       <svg class="g-hand" width="22" height="22" viewBox="0 0 24 24"><g fill="#ff9f45"><rect x="6.6" y="4" width="2.4" height="9" rx="1.2"/><rect x="9.6" y="2.6" width="2.4" height="10.4" rx="1.2"/><rect x="12.6" y="3.4" width="2.4" height="9.6" rx="1.2"/><rect x="15.4" y="5" width="2.4" height="8" rx="1.2"/><rect x="3.6" y="10.5" width="2.4" height="6" rx="1.2" transform="rotate(-32 4.8 13.5)"/><rect x="6" y="10" width="12" height="11" rx="4"/></g></svg>
+      <svg class="g-grab" width="22" height="22" viewBox="0 0 24 24"><g fill="#ff9f45"><rect x="6.8" y="7" width="2.3" height="4.6" rx="1.15"/><rect x="9.7" y="6.2" width="2.3" height="5.4" rx="1.15"/><rect x="12.6" y="6.6" width="2.3" height="5" rx="1.15"/><rect x="15.2" y="7.6" width="2.2" height="4" rx="1.1"/><rect x="3.9" y="10.4" width="2.3" height="5" rx="1.15" transform="rotate(-28 5 12.9)"/><rect x="6" y="10" width="12" height="10.4" rx="4.6"/></g></svg>
       <svg class="g-text" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff9f45" stroke-width="2.2" stroke-linecap="round"><path d="M12 4 V20 M8 4 H16 M8 20 H16"/></svg>
     </span>
     <span class="hc-tag">you</span>
@@ -148,7 +149,12 @@ const frames = projects.map((p, i) => ({
     overflow: hidden;
     isolation: isolate;
     z-index: 1; /* sits above the page-level dot grid, which shows through the transparent bg */
+    /* dragging frames / panning shouldn't accidentally select labels, status text, etc. */
+    -webkit-user-select: none;
+    user-select: none;
   }
+  /* ...but the chat input is real text you can select + edit */
+  .hc-input input { -webkit-user-select: text; user-select: text; }
   /* only the ambient glows live here now; the dot grid is a page-level layer
      (see index.astro .page-grid) so it can overflow + fade into the work section */
   .hc-bg {
@@ -244,7 +250,7 @@ const frames = projects.map((p, i) => ({
      name always visible in the footer and the role + "Open" revealed on hover. */
   .hc-frame {
     position: absolute; top: 0; left: 0;
-    width: 340px;
+    width: 289px;
     aspect-ratio: 4 / 3;
     border-radius: var(--radius-lg);
     background: var(--surface);
@@ -401,11 +407,12 @@ const frames = projects.map((p, i) => ({
   }
   /* the "you" label stays in every state; only the glyph swaps.
      A filled hand covers every interactive element (grab / drag / click). */
-  .g-hand { transform: translate(-8px, -2px); } /* align the hand near the pointer */
+  .g-hand, .g-grab { transform: translate(-8px, -2px); } /* align the hand near the pointer */
   .hc-you[data-state="default"] .g-arrow { display: block; }
   .hc-you[data-state="grab"] .g-hand,
   .hc-you[data-state="grabbing"] .g-hand,
   .hc-you[data-state="point"] .g-hand { display: block; }
+  .hc-you[data-state="panning"] .g-grab { display: block; } /* closed fist while panning the canvas */
   .hc-you[data-state="text"] .g-text { display: block; }
 
 
@@ -497,7 +504,7 @@ const frames = projects.map((p, i) => ({
   }
   .hero-canvas.hc-lite .hc-frame {
     position: relative; top: auto; left: auto;
-    width: auto; flex: 0 0 82%; max-width: 320px;
+    width: auto; flex: 0 0 78%; max-width: 272px;
     scroll-snap-align: center;
     opacity: 0; transform: translateY(16px);
   }
@@ -510,7 +517,7 @@ const frames = projects.map((p, i) => ({
   .hero-canvas.hc-lite.hc-cards-in .hc-frame:nth-child(5) { animation-delay: 0.28s; }
   .hero-canvas.hc-lite.hc-cards-in .hc-frame:nth-child(6) { animation-delay: 0.35s; }
 
-  @media (max-width: 720px) { .hc-frame { width: 210px; } }
+  @media (max-width: 720px) { .hc-frame { width: 178px; } }
   @media (prefers-reduced-motion: reduce) { .hc-caret { animation: none; } .hc-pulse { animation: none; } }
 </style>
 
@@ -564,12 +571,14 @@ const frames = projects.map((p, i) => ({
         requestAnimationFrame(loop);
       }
       requestAnimationFrame(loop);
-      // agent tracks the caret as the greeting types (so it "writes" it)
+      // agent tracks the BOTTOM of the caret as the greeting types (so it "writes" it)
       function toCaret() {
         var hr = hero.getBoundingClientRect(), cr = caret.getBoundingClientRect();
-        lag.tx = cr.left - hr.left - 6; lag.ty = cr.top - hr.top - 4;
+        lag.tx = cr.left - hr.left - 6; lag.ty = cr.bottom - hr.top - 2;
       }
       nameEl.textContent = ""; nameEl.appendChild(caret); caret.style.display = "inline-block";
+      // start the agent right on the first letter ("H")
+      toCaret(); lag.x = lag.tx; lag.y = lag.ty;
       var idx = 0;
       (function step() {
         nameEl.textContent = NAME.slice(0, idx); nameEl.appendChild(caret);
@@ -666,9 +675,9 @@ const frames = projects.map((p, i) => ({
       // size a card so the whole grid fits the band, then cap so it stays comfortable
       var maxByH = (band - (rows - 1) * gap) / rows;      // height budget per row
       var maxByW = (W - 32 - (cols - 1) * gap) / cols;    // width budget per col
-      var cwMax = W < 640 ? 300 : (W < 960 ? 340 : 380);
+      var cwMax = W < 640 ? 255 : (W < 960 ? 289 : 323); // ~15% smaller cards
       var cw = Math.min(cwMax, maxByW, maxByH * (4 / 3));
-      cw = Math.max(200, cw);
+      cw = Math.max(170, cw);
       var cardH = cw * (3 / 4);
       cards.forEach(function (c) {
         c.el.style.display = ""; c.off = false;
@@ -887,6 +896,7 @@ const frames = projects.map((p, i) => ({
           ag.ackCoolUntil = performance.now() + 2600;
         }
       }
+      if (panning) { youEl.setAttribute("data-state", "panning"); return; }
       if (grabbing) { youEl.setAttribute("data-state", "grabbing"); return; }
       var t = e.target, st = "default";
       if (t && t.closest) {
@@ -942,13 +952,17 @@ const frames = projects.map((p, i) => ({
     document.getElementById("hcZoomFit").addEventListener("click", resetCamera);
 
     // ---- cold-open ----
-    // point the agent at the typing caret so it looks like it's writing the greeting
-    function toCaret() {
+    // point the agent's pen tip at the BOTTOM of the typing caret so it looks like it's
+    // writing the greeting along the baseline
+    function caretPoint() {
       var hr = hero.getBoundingClientRect(), cr = caret.getBoundingClientRect();
-      agentTo(cr.left - hr.left - 6, cr.top - hr.top - 4);
+      return { x: cr.left - hr.left - 6, y: cr.bottom - hr.top - 2 };
     }
+    function toCaret() { var p = caretPoint(); agentTo(p.x, p.y); }
     function typeName(onStep, onDone) {
       nameEl.textContent = ""; nameEl.appendChild(caret); caret.style.display = "inline-block";
+      // snap the agent onto the first letter ("H") so it starts writing there — no fly-in
+      var p = caretPoint(); ag.x = ag.tx = p.x; ag.y = ag.ty = p.y;
       var idx = 0;
       (function step() {
         nameEl.textContent = NAME.slice(0, idx); nameEl.appendChild(caret);

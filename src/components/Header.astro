@@ -47,6 +47,23 @@ const isActive = (href: string) => !href.includes("#") && path.startsWith(href);
       }
     });
   }
+
+  // Mark the "Work" nav link as current while the Work section is in view (scrollspy).
+  (function () {
+    var workLink = document.querySelector('.fn-link[href$="#work"]');
+    var workSection = document.getElementById("work");
+    if (!workLink || !workSection || !("IntersectionObserver" in window)) return;
+    var io = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) workLink.setAttribute("aria-current", "page");
+          else workLink.removeAttribute("aria-current");
+        });
+      },
+      { rootMargin: "-45% 0px -45% 0px" }, // fires when the section crosses the viewport middle
+    );
+    io.observe(workSection);
+  })();
 </script>
 
 <style>
@@ -116,8 +133,10 @@ const isActive = (href: string) => !href.includes("#") && path.startsWith(href);
     -webkit-backdrop-filter: blur(14px) saturate(1.4);
     backdrop-filter: blur(14px) saturate(1.4);
     border: 1px solid var(--hairline);
-    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.6);
+    /* lighter in light mode; the dark theme restores a deeper shadow below */
+    box-shadow: 0 6px 20px -12px rgba(0, 0, 0, 0.22);
   }
+  :global(html[data-theme="dark"]) .fn-pill { box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.6); }
   .fn-link {
     padding: 8px 16px;
     border-radius: 999px;
