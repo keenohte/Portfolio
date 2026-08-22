@@ -16,6 +16,8 @@ order: 0
 draft: false
 ---
 
+import Figure from "../../components/CaseFigure.astro";
+
 ## Overview
 
 Zocdoc is where patients find a doctor and book a visit. The provider profile is the page where someone decides whether this is the right person to see, and then books. I led the design work to rebuild it.
@@ -38,11 +40,24 @@ To break the cycle, we ran a week-long design sprint with product, design, and r
 
 Two changes carried it. The first was an "at-a-glance" section at the top, so someone could size up a provider quickly. The second was a restructured reviews module. Reviews drive most of the decision, so we made them easier to scan, filter, and jump into, including surfacing potential red flags early.
 
+<Figure
+  label="Phase 1"
+  ratio="16 / 10"
+  caption="The Phase 1 concept: an at-a-glance summary up top, with the restructured reviews module below it."
+/>
+
 ## Why it lost
 
 The test came back a loss, and the reasons were specific.
 
 The at-a-glance section took up too much room, especially on mobile, where it added to the cognitive load and pushed the booking module fully below the fold. Separately, a technical issue made the mobile booking CTA appear late, and that alone accounted for a 0.6% drop in people entering the booking flow.
+
+<Figure
+  label="Mobile"
+  ratio="9 / 16"
+  max="320px"
+  caption="On mobile, the at-a-glance section pushed the booking module fully below the fold."
+/>
 
 One change did stand out. We had added a quick link to the provider's practice page, and it drove a 10% increase in people visiting those pages from the profile. That told us the information was valuable. But the way we surfaced it sent people on a detour instead of helping them in place. The profile and practice pages looked and behaved like different products, and moving between them was jarring. If someone jumped from a profile to a practice page with several providers, the right one wasn't even pre-selected.
 
@@ -63,7 +78,19 @@ The biggest shift is structural. The layout is modular, so pieces can be rearran
 
 We also rethought the booking module itself. Today it shows five or six inputs at once, which is a lot to face on a page you're still reading. We cut it back to the inputs that actually affect availability at this stage, like location and whether you're a new or existing patient. Everything else, such as visit reason, insurance, and time, moves to a dedicated booking page. Booking stays quick for people ready to act, and the module stops competing with the provider details everyone else came to read.
 
+<Figure
+  label="Booking module"
+  ratio="16 / 9"
+  caption="The booking module before and after: from five or six inputs down to the two that affect availability at this stage."
+/>
+
 Beyond the profile, we started closing the gap to the practice page. Recent research there pointed to a need for stronger trust signals, so people feel confident booking through Zocdoc without leaving to verify a provider somewhere else. Early explorations add office photos and a better map so the practice page reads as part of the same journey.
+
+<Figure
+  label="Practice page"
+  ratio="16 / 10"
+  caption="An early practice-page exploration, adding office photos and a clearer map so it reads as part of the same journey."
+/>
 
 ## Where it's going
 
