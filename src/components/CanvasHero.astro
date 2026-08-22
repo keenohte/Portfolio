@@ -1,6 +1,6 @@
 ---
 import { getCollection } from "astro:content";
-import { site, link } from "../config";
+import { site, link, asset } from "../config";
 
 // The hero canvas shows a CURATED set — featured projects only, capped at 4.
 // The full list lives in the "All work" section below.
@@ -70,11 +70,11 @@ const frames = projects.map((p, i) => ({
           <span class="hc-media" data-thumb={f.thumb}>
             {
               f.video ? (
-                <video class="hc-vid" muted loop playsinline preload="metadata" poster={f.cover}>
-                  <source src={f.video} />
+                <video class="hc-vid" muted loop playsinline preload="metadata" poster={asset(f.cover)}>
+                  <source src={asset(f.video)} />
                 </video>
               ) : f.cover ? (
-                <img src={f.cover} alt="" />
+                <img src={asset(f.cover)} alt="" />
               ) : (
                 <span class="hc-fpo" aria-hidden="true">
                   <span class="fpo-blob fpo-blob-a"></span>

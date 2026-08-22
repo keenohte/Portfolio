@@ -2,7 +2,7 @@
 import { getCollection, render } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CaseAside from "../../components/CaseAside.astro";
-import { link } from "../../config";
+import { link, asset } from "../../config";
 
 export async function getStaticPaths() {
   const projects = await getCollection("work", ({ data }) => !data.draft);
@@ -24,7 +24,7 @@ const idx = all.findIndex((e) => e.id === entry.id);
 const next = all[(idx + 1) % all.length];
 ---
 
-<BaseLayout title={d.title} description={d.summary} image={d.cover}>
+<BaseLayout title={d.title} description={d.summary} image={asset(d.cover)}>
   <article class="case">
     <!-- Nav -->
     <div class="wrap case-topnav load-in">
@@ -64,7 +64,7 @@ const next = all[(idx + 1) % all.length];
     <div class="wrap">
       {
         d.cover ? (
-          <img class="case-cover load-in" src={d.cover} alt={d.coverAlt ?? d.title} />
+          <img class="case-cover load-in" src={asset(d.cover)} alt={d.coverAlt ?? d.title} />
         ) : (
           <div class="case-cover cover-placeholder load-in">{d.title}</div>
         )

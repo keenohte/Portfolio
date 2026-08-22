@@ -3,40 +3,45 @@
  * A figure for case studies. Drop it into an .mdx body:
  *
  *   import Figure from "../../components/CaseFigure.astro";
- *   <Figure caption="What the screenshot shows." label="Phase 1" />
+ *   <Figure src="/work/foo.png" alt="…" caption="…" />
+ *   <Figure video="/work/clip.mp4" poster="/work/foo.png" caption="…" />
  *
- * With no `src` it renders a clean placeholder panel (aspect-ratio reserved,
- * so layout doesn't shift when the real image lands). Add a screenshot to
- * /public/work/ and pass its path to go live:
- *
- *   <Figure src="/work/zocdoc-phase-1.png" alt="…" caption="…" />
- *
- * Local paths (starting with "/") are made base-path aware automatically, so
- * "/work/foo.png" resolves correctly under the /portfolio base.
+ * With no `src`/`video` it renders a placeholder panel (aspect-ratio reserved).
+ * Real images render at their natural ratio (no crop). Local paths (starting
+ * with "/") are made base-path aware, so "/work/foo.png" works under /portfolio.
  */
 import { link } from "../config";
 
 interface Props {
   src?: string;
+  video?: string;
+  poster?: string;
   alt?: string;
   caption?: string;
   label?: string; // short tag shown on the placeholder (e.g. "Before", "Phase 1")
-  ratio?: string; // aspect-ratio, e.g. "16 / 10" (default) or "4 / 3"
-  max?: string; // optional max-width, centered — use for portrait/phone shots (e.g. "340px")
+  ratio?: string; // placeholder aspect-ratio, e.g. "16 / 10" (default)
+  max?: string; // optional max-width, centered — use for portrait/phone shots
 }
 
-const { src, alt, caption, label = "image", ratio = "16 / 10", max } = Astro.props;
-const figStyle = max ? `max-width:${max};margin-inline:auto` : undefined;
+const { src, video, poster, alt, caption, label = "image", ratio = "16 / 10", max } =
+  Astro.props;
 
-// resolve root-relative asset paths against the site base; leave URLs untouched
-const resolved =
-  src && src.startsWith("/") && !src.startsWith("//") ? link(src) : src;
+const base = (p?: string) =>
+  p && p.startsWith("/") && !p.startsWith("//") ? link(p) : p;
+const imgSrc = base(src);
+const vidSrc = base(video);
+const posterSrc = base(poster);
+const figStyle = max ? `max-width:${max};margin-inline:auto` : undefined;
 ---
 
 <figure class="case-fig" style={figStyle}>
   {
-    resolved ? (
-      <img src={resolved} alt={alt ?? caption ?? ""} loading="lazy" style={`aspect-ratio:${ratio}`} />
+    vidSrc ? (
+      <video class="fig-media" controls preload="metadata" playsinline poster={posterSrc}>
+        <source src={vidSrc} />
+      </video>
+    ) : imgSrc ? (
+      <img class="fig-media" src={imgSrc} alt={alt ?? caption ?? ""} loading="lazy" />
     ) : (
       <div class="fig-ph" style={`aspect-ratio:${ratio}`} aria-hidden="true">
         <span class="fig-ph-tag">{label}</span>
@@ -50,13 +55,14 @@ const resolved =
   .case-fig {
     margin: var(--space-l) 0;
   }
-  .case-fig img {
+  /* real media renders at its natural ratio — screenshots show in full, no crop */
+  .fig-media {
     display: block;
     width: 100%;
     height: auto;
     border-radius: var(--radius);
     border: 1px solid var(--line);
-    object-fit: cover;
+    background: var(--surface-2);
   }
   /* placeholder panel — quiet tinted surface + faint dot texture, clearly a drop-zone */
   .fig-ph {

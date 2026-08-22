@@ -11,6 +11,8 @@ problem: "The profile page had turned into a patchwork of isolated A/B wins, opt
 metric:
   value: "5–6 → 2"
   label: "booking inputs shown upfront"
+cover: "/work/zocdoc-profile-cover.png"
+coverAlt: "The redesigned Zocdoc provider profile with a simplified booking module, on desktop and mobile"
 featured: true
 order: 0
 draft: false
@@ -41,9 +43,15 @@ To break the cycle, we ran a week-long design sprint with product, design, and r
 Two changes carried it. The first was an "at-a-glance" section at the top, so someone could size up a provider quickly. The second was a restructured reviews module. Reviews drive most of the decision, so we made them easier to scan, filter, and jump into, including surfacing potential red flags early.
 
 <Figure
-  label="Phase 1"
-  ratio="16 / 10"
-  caption="The Phase 1 concept: an at-a-glance summary up top, with the restructured reviews module below it."
+  src="/work/zocdoc-profile-sprint.png"
+  alt="Design sprint workshop with sticky notes and whiteboard sketches"
+  caption="A week-long design sprint with product, design, and research kicked off the work."
+/>
+
+<Figure
+  src="/work/zocdoc-profile-phase1.png"
+  alt="The Phase 1 profile redesign showing an at-a-glance summary and reviews"
+  caption="The Phase 1 profile: an 'at a glance' summary up top and a restructured reviews module."
 />
 
 ## Why it lost
@@ -53,10 +61,9 @@ The test came back a loss, and the reasons were specific.
 The at-a-glance section took up too much room, especially on mobile, where it added to the cognitive load and pushed the booking module fully below the fold. Separately, a technical issue made the mobile booking CTA appear late, and that alone accounted for a 0.6% drop in people entering the booking flow.
 
 <Figure
-  label="Mobile"
-  ratio="9 / 16"
-  max="320px"
-  caption="On mobile, the at-a-glance section pushed the booking module fully below the fold."
+  src="/work/zocdoc-profile-practice-disconnect.png"
+  alt="A multi-provider practice page that looks different from the profile page"
+  caption="The profile and the practice page behaved like different products. On a multi-provider practice page, the doctor you came from wasn't even pre-selected."
 />
 
 One change did stand out. We had added a quick link to the provider's practice page, and it drove a 10% increase in people visiting those pages from the profile. That told us the information was valuable. But the way we surfaced it sent people on a detour instead of helping them in place. The profile and practice pages looked and behaved like different products, and moving between them was jarring. If someone jumped from a profile to a practice page with several providers, the right one wasn't even pre-selected.
@@ -78,17 +85,11 @@ The biggest shift is structural. The layout is modular, so pieces can be rearran
 
 We also rethought the booking module itself. Today it shows five or six inputs at once, which is a lot to face on a page you're still reading. We cut it back to the inputs that actually affect availability at this stage, like location and whether you're a new or existing patient. Everything else, such as visit reason, insurance, and time, moves to a dedicated booking page. Booking stays quick for people ready to act, and the module stops competing with the provider details everyone else came to read.
 
-<Figure
-  label="Booking module"
-  ratio="16 / 9"
-  caption="The booking module before and after: from five or six inputs down to the two that affect availability at this stage."
-/>
-
 Beyond the profile, we started closing the gap to the practice page. Recent research there pointed to a need for stronger trust signals, so people feel confident booking through Zocdoc without leaving to verify a provider somewhere else. Early explorations add office photos and a better map so the practice page reads as part of the same journey.
 
 <Figure
-  label="Practice page"
-  ratio="16 / 10"
+  src="/work/zocdoc-profile-practice-new.png"
+  alt="Redesigned practice page with office photos and a map"
   caption="An early practice-page exploration, adding office photos and a clearer map so it reads as part of the same journey."
 />
 

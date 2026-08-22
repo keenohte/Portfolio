@@ -11,6 +11,11 @@ export const link = (path = "") => {
   return p ? `${b}/${p}` : `${b}/`;
 };
 
+// Base-aware resolver for asset paths (covers, videos). Root-relative paths like
+// "/work/foo.png" become base-aware; absolute URLs and empty values pass through.
+export const asset = (path?: string) =>
+  path && path.startsWith("/") && !path.startsWith("//") ? link(path) : path;
+
 export const site = {
   name: "Lucas Clutter",
   // The canvas hero types this out. Keep it short and human.

@@ -9,6 +9,7 @@ interface Props {
   cover?: string;
   coverAlt?: string;
 }
+import { asset } from "../config";
 const { href, title, summary, company, timeline, tags, cover, coverAlt } = Astro.props;
 ---
 
@@ -16,7 +17,7 @@ const { href, title, summary, company, timeline, tags, cover, coverAlt } = Astro
   <div class="media">
     {
       cover ? (
-        <img src={cover} alt={coverAlt ?? title} loading="lazy" />
+        <img src={asset(cover)} alt={coverAlt ?? title} loading="lazy" />
       ) : (
         <div class="cover-placeholder">{title}</div>
       )
